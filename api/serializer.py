@@ -1,10 +1,30 @@
-from .models import Circle, Report, Message, User
+from .models import (
+    Circle, 
+    Report, 
+    Message, 
+    CustomUser, 
+    CircleReports, 
+    CircleUsers
+    )
+    
 from rest_framework import serializers
+# JWT Stuff
+# from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class CircleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Circle
+        fields = '__all__'
+
+class CircleReportsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CircleReports
+        fields = '__all__'
+
+class CircleUsersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CircleUsers
         fields = '__all__'
 
 
@@ -18,7 +38,7 @@ class MessageSerializer(serializers.HyperlinkedModelSerializer):
         model = Message
         fields = '__all__'
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = '__all__'
+        model = CustomUser
+        fields = ('email', 'last_login', 'date_joined', 'is_staff')

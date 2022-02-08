@@ -1,10 +1,20 @@
-from csv import list_dialects
 from django.contrib import admin
-from .models import Circle, Report, Message, User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
 
-# Register your models here.
+from .forms import (
+    CustomUserChangeForm,
+    CustomUserCreationForm
+    )
 
-admin.site.register(User)
+from .models import (
+    Circle,
+    Report, 
+    Message, 
+    CustomUser
+    )
+
+
 
 @admin.register(Circle)
 class CircleAdmin(admin.ModelAdmin):
@@ -18,3 +28,11 @@ class ReportAdmin(admin.ModelAdmin):
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ['senderUserID', 'reciverUserID']
+
+class CustomUserAdmin(UserAdmin):    
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
+    model = CustomUser
+    list_display = ['email']
+
+admin.site.register(CustomUser, CustomUserAdmin)
