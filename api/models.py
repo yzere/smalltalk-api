@@ -39,8 +39,8 @@ class Circle(models.Model):
     max_users               = models.CharField(max_length=50, blank=True, null=True)
     stats                   = models.CharField(max_length=50, blank=True, null=True)
     admin_users_IDs         = models.ForeignKey(Profile, related_name='admin_users_IDs', on_delete=models.CASCADE)
-    reports_IDs             = models.ForeignKey('Report', null=True, on_delete=models.SET_NULL)
-    users_IDs               = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL)
+    reports_IDs             = models.ForeignKey('Report', blank=True, null=True, on_delete=models.SET_NULL)
+    users_IDs               = models.ForeignKey(Profile, blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return str(self.circle_ID)
@@ -80,7 +80,7 @@ class Report(models.Model):
 class WaitingRoom(models.Model):
     room_ID                     = models.AutoField(primary_key=True)
     users_that_want_to_join_IDs = models.OneToOneField(Profile, null=True, on_delete=models.SET_NULL)
-    active_sessions_IDs         = models.ForeignKey('ActiveSession',null=True, on_delete=models.SET_NULL)
+    active_sessions_IDs         = models.ForeignKey('ActiveSession', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return str(self.room_ID)
@@ -94,7 +94,7 @@ class ActiveSession(models.Model):
     session_ID              = models.AutoField(primary_key=True)
     member1_ID              = models.OneToOneField(WaitingRoom, to_field='users_that_want_to_join_IDs', related_name='member1', unique=True, on_delete=models.CASCADE)
     member2_ID              = models.OneToOneField(WaitingRoom, to_field='users_that_want_to_join_IDs', related_name='member2', unique=True, on_delete=models.CASCADE)
-    messages_IDs            = models.ForeignKey('Message', on_delete=models.SET_NULL, null=True)
+    messages_IDs            = models.ForeignKey('Message', blank=True,  on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return str(self.session_ID)
