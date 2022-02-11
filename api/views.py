@@ -6,18 +6,15 @@ from .serializer import (
     CircleSerializer, 
     ReportSerializer, 
     MessageSerializer,
-    CustomUserSerializer,
-    CircleUsersSerializer, 
-    CircleReportsSerializer
+    CustomUserSerializer
     )
 
 from .models import (
     Circle, 
     Report,
     Message, 
-    CustomUser, 
-    CircleUsers,
-    CircleReports)
+    CustomUser
+    )
 
 class CircleViewSet(viewsets.ModelViewSet):
     queryset = Circle.objects.all()
@@ -34,11 +31,3 @@ class MessageViewSet(viewsets.ModelViewSet):
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-
-class CircleUsersViewSet(viewsets.ModelViewSet):
-    queryset = CircleUsers.objects.all()
-    serializer_class = CircleUsersSerializer
-
-class CircleReportsViewSet(viewsets.ModelViewSet):
-    queryset = CircleReports.objects.all()
-    serializer_class = CircleReportsSerializer

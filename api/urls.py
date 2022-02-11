@@ -4,9 +4,7 @@ from .views import (
     CircleViewSet, 
     ReportViewSet, 
     MessageViewSet, 
-    CustomUserViewSet, 
-    CircleUsersViewSet, 
-    CircleReportsViewSet
+    CustomUserViewSet
     )
 
 router = routers.DefaultRouter()
@@ -14,8 +12,6 @@ router.register(r'circles', CircleViewSet),
 router.register(r'reports', ReportViewSet),
 router.register(r'messages', MessageViewSet),
 router.register(r'users', CustomUserViewSet)
-router.register(r'circleusers', CircleUsersViewSet),
-router.register(r'circlereports', CircleReportsViewSet)
 
 urlpatterns = [
     path('models/', include(router.urls)),
