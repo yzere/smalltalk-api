@@ -2,7 +2,10 @@ from .models import (
     Circle, 
     Report, 
     Message, 
-    CustomUser
+    CustomUser,
+    Profile,
+    WaitingRoom,
+    ActiveSession
     )
     
 from rest_framework import serializers
@@ -29,3 +32,18 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('email', 'last_login', 'date_joined', 'is_staff')
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+class WaitingRoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WaitingRoom
+        fields = '__all__'
+
+class ActiveSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActiveSession
+        fields = '__all__'

@@ -4,14 +4,20 @@ from .views import (
     CircleViewSet, 
     ReportViewSet, 
     MessageViewSet, 
-    CustomUserViewSet
+    CustomUserViewSet,
+    ProfileViewSet,
+    WaitingRoomViewSet,
+    ActiveSessionViewSet
     )
 
 router = routers.DefaultRouter()
 router.register(r'circles', CircleViewSet),
 router.register(r'reports', ReportViewSet),
 router.register(r'messages', MessageViewSet),
-router.register(r'users', CustomUserViewSet)
+router.register(r'users', CustomUserViewSet),
+router.register(r'profile', ProfileViewSet),
+router.register(r'WaitingRoom', WaitingRoomViewSet),
+router.register(r'ActiveSession', ActiveSessionViewSet)
 
 urlpatterns = [
     path('models/', include(router.urls)),

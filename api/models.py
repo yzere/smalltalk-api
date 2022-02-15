@@ -16,8 +16,8 @@ class CustomUser(AbstractUser):
 
 class Profile(models.Model):
     profile_ID              = models.OneToOneField(CustomUser, primary_key=True, on_delete=models.CASCADE)
-    stats                   = models.CharField(max_length=50, blank=True, null=True)
-    social_link             = models.CharField(max_length=50, blank=True, null=True)
+    stats                   = models.JSONField(null=True)
+    social_link             = models.JSONField(null=True)
     name                    = models.CharField(max_length=50, blank=True, null=True)
     contact                 = models.CharField(max_length=50, blank=True, null=True)
     user_circles_IDs        = models.ManyToManyField('Circle', blank=True,)
@@ -34,13 +34,13 @@ class Circle(models.Model):
     name                    = models.CharField(max_length=50, blank=True, null=True)
     localization            = models.CharField(max_length=50, blank=True, null=True)
     description             = models.CharField(max_length=50, blank=True, null=True)
-    expire_date             = models.CharField(max_length=50, blank=True, null=True)
-    creation_date           = models.CharField(max_length=50, blank=True, null=True)
-    max_users               = models.CharField(max_length=50, blank=True, null=True)
-    stats                   = models.CharField(max_length=50, blank=True, null=True)
-    admin_users_IDs         = models.ForeignKey(Profile, related_name='admin_users_IDs', on_delete=models.CASCADE)
-    reports_IDs             = models.ForeignKey('Report', blank=True, null=True, on_delete=models.SET_NULL)
-    users_IDs               = models.ForeignKey(Profile, blank=True, null=True, on_delete=models.SET_NULL)
+    expire_date             = models.DateTimeField()
+    creation_date           = models.DateTimeField(auto_now_add=True)
+    max_users               = models.IntegerField()
+    stats                   = models.JSONField(null=True)
+    admin_users_IDs         = models.ManyToManyField('Profile', blank=True, related_name='admin_users_IDs')
+    reports_IDs             = models.ManyToManyField('Report', blank=True)
+    users_IDs               = models.ManyToManyField('Profile', blank=True, related_name='users_IDs')
 
     def __str__(self):
         return str(self.circle_ID)
@@ -79,7 +79,7 @@ class Report(models.Model):
 
 class WaitingRoom(models.Model):
     room_ID                     = models.AutoField(primary_key=True)
-    users_that_want_to_join_IDs = models.OneToOneField(Profile, null=True, on_delete=models.SET_NULL)
+    user_that_want_to_join_ID   = models.OneToOneField('Profile', on_delete=models.CASCADE)
     active_sessions_IDs         = models.ForeignKey('ActiveSession', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
@@ -89,12 +89,11 @@ class WaitingRoom(models.Model):
 
 
 
-
 class ActiveSession(models.Model):
     session_ID              = models.AutoField(primary_key=True)
-    member1_ID              = models.OneToOneField(WaitingRoom, to_field='users_that_want_to_join_IDs', related_name='member1', unique=True, on_delete=models.CASCADE)
-    member2_ID              = models.OneToOneField(WaitingRoom, to_field='users_that_want_to_join_IDs', related_name='member2', unique=True, on_delete=models.CASCADE)
-    messages_IDs            = models.ForeignKey('Message', blank=True,  on_delete=models.SET_NULL, null=True)
+    member1_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member1_ID', on_delete=models.CASCADE)
+    member2_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member2_ID', on_delete=models.CASCADE, null=True)
+    messages_IDs            = models.ManyToManyField('Message', blank=True)
 
     def __str__(self):
         return str(self.session_ID)
@@ -107,7 +106,7 @@ class ActiveSession(models.Model):
 
 class Message(models.Model):
     message_ID              = models.AutoField(primary_key=True)
-    send_time               = models.CharField(max_length=50, blank=True, null=True)
+    send_time               = models.DateTimeField(auto_now_add=True)
     attachments_URL         = models.CharField(max_length=50, blank=True, null=True)
     type                    = models.CharField(max_length=50, blank=True, null=True)
     content                 = models.CharField(max_length=50, blank=True, null=True)
