@@ -79,7 +79,7 @@ class Report(models.Model):
 
 class WaitingRoom(models.Model):
     room_ID                     = models.AutoField(primary_key=True)
-    user_that_want_to_join_ID   = models.OneToOneField('Profile', on_delete=models.CASCADE)
+    user_that_want_to_join_ID   = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
     active_sessions_IDs         = models.ForeignKey('ActiveSession', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
@@ -91,7 +91,7 @@ class WaitingRoom(models.Model):
 
 class ActiveSession(models.Model):
     session_ID              = models.AutoField(primary_key=True)
-    member1_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member1_ID', on_delete=models.CASCADE)
+    member1_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member1_ID', on_delete=models.CASCADE, null=True)
     member2_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member2_ID', on_delete=models.CASCADE, null=True)
     messages_IDs            = models.ManyToManyField('Message', blank=True)
 
@@ -110,8 +110,8 @@ class Message(models.Model):
     attachments_URL         = models.CharField(max_length=50, blank=True, null=True)
     type                    = models.CharField(max_length=50, blank=True, null=True)
     content                 = models.CharField(max_length=50, blank=True, null=True)
-    sender_ID               = models.ForeignKey(Profile, related_name='sender_ID', on_delete=models.CASCADE)
-    reciver_ID              = models.ForeignKey(Profile, related_name='reciver_ID', on_delete=models.CASCADE) 
+    sender_ID               = models.ForeignKey(CustomUser, related_name='sender_ID', on_delete=models.CASCADE)
+    #reciver_ID              = models.ForeignKey(Profile, related_name='reciver_ID', on_delete=models.CASCADE)              Nie wiem czy jest sens to robić
     active_session_ID       = models.ForeignKey(ActiveSession, on_delete=models.CASCADE)
 
     def __str__(self):

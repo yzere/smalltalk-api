@@ -1,6 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-
+from channels.db import database_sync_to_async
+from api.models import Message, ActiveSession
 
 class ChatRoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -24,6 +25,19 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         username = text_data_json['username']
+        self.user_ID = self.scope['user'].user_ID
+
+        #znajdowanie sesji
+        room = await database_sync_to_async(ActiveSession.objects.get)(session_ID=self.room_name)
+
+        #tworzenie nowej wiadomości
+        msg = Message(
+			content=message,
+			sender_ID=self.scope['user'],
+			active_session_ID=room
+		)
+
+        await database_sync_to_async(msg.save)()
 
         await self.channel_layer.group_send(
             self.room_group_name,
