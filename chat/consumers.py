@@ -25,6 +25,8 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         username = text_data_json['username']
+        print(text_data_json)
+        print (self.scope['user'])
         self.user_ID = self.scope['user'].user_ID
 
         #znajdowanie sesji
