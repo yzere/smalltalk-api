@@ -91,8 +91,8 @@ class WaitingRoom(models.Model):
 
 class ActiveSession(models.Model):
     session_ID              = models.AutoField(primary_key=True)
-    member1_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member1_ID', on_delete=models.CASCADE, null=True)
-    member2_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member2_ID', on_delete=models.CASCADE, null=True)
+    member1_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member1_ID', on_delete=models.DO_NOTHING, null=True)
+    member2_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member2_ID', on_delete=models.DO_NOTHING, null=True)
     messages_IDs            = models.ManyToManyField('Message', blank=True)
 
     def __str__(self):
