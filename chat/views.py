@@ -1,8 +1,25 @@
 from django.shortcuts import render
-from api.models import ActiveSession, Message
+from api.models import ActiveSession, Message, Profile, WaitingRoom
+from random import choice
 
 # Create your views here.
 def index(request):
+
+    # Jak na jeżeli są jakieś sesje, lub nie ma sesji, to dodaje użytkownika lub tworzy sesję, pozostało: jeśeli użytkownik ma sesję to do niej dodaje
+
+    user_id = request.user
+    addWaiting = WaitingRoom(user_that_want_to_join_ID=user_id)
+    freeSessions = ActiveSession.objects.filter(member2_ID__isnull=True).values_list('pk', flat=True)
+
+    if freeSessions  and not WaitingRoom.objects.get(user_that_want_to_join_ID=user_id):
+        randomSessionPk = choice(freeSessions)
+        randomSessionObj = ActiveSession.objects.get(pk=randomSessionPk)
+        randomSessionObj.member2_ID = WaitingRoom.objects.get(user_that_want_to_join_ID=user_id)
+        randomSessionObj.save()
+    elif not WaitingRoom.objects.get(user_that_want_to_join_ID=user_id):
+        newSession = ActiveSession(member1_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user_id))
+        newSession.save()
+
     return render(request, 'index.html', {})
 
 def room(request, room_name):
