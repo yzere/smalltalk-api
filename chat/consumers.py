@@ -29,19 +29,22 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         self.user_ID = self.scope['user'].user_ID
         print(self.scope['user'].user_ID)
 
-        #znajdowanie sesji
+        # Znajdowanie sesji
         room = await database_sync_to_async(ActiveSession.objects.get)(session_ID=self.room_name)
 
-        #tworzenie nowej wiadomości
+        # Tworzenie nowej wiadomości
         msg = Message(
 			content=message,
 			sender_ID=self.scope['user'],
 			active_session_ID=room
 		)
-
-        #tu jeszcze powinno być coś do dodania wiadomości do sesji
-
         await database_sync_to_async(msg.save)()
+
+        # Dodawanie wiadomości do sesji
+
+        msgLink = await database_sync_to_async(ActiveSession.objects.get)(pk=self.room_name)
+        await database_sync_to_async(msgLink.messages_IDs.add)(msg)
+
 
         await self.channel_layer.group_send(
             self.room_group_name,
