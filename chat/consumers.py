@@ -1,4 +1,5 @@
 import json
+from lib2to3.pytree import Base
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.http import JsonResponse
@@ -9,7 +10,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
-
+        penalty = 0;
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -19,16 +20,32 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         try:
             if database_sync_to_async(ActiveSession.objects.filter)(member1_ID=self.user_ID) != None:
                 session = await database_sync_to_async(ActiveSession.objects.get)(member1_ID=self.user_ID)
-            
-            elif database_sync_to_async(ActiveSession.objects.filter)(member2_ID=self.user_ID) != None:
+        except BaseException as err:
+            penalty += 1;
+        
+        try:
+            if database_sync_to_async(ActiveSession.objects.filter)(member2_ID=self.user_ID) != None:
                 session = await database_sync_to_async(ActiveSession.objects.get)(member2_ID=self.user_ID)
                 #kontynuacja tego
         except BaseException as err:
+            penalty += 1;
+        
+        if penalty > 1:
             session = None
             print(f'ERROR: {err} ')
             print(f'user {self.user_ID} has no active session')
             await self.close()
+            penalty = 0
             return
+        else: 
+            penalty = 0
+        # else:
+        # except BaseException as err:
+        #     session = None
+        #     print(f'ERROR: {err} ')
+        #     print(f'user {self.user_ID} has no active session')
+        #     await self.close()
+        #     return
         
         print(f'self.room_name: {self.room_name} | session_ID: {session.session_ID}')
         if int(session.session_ID) == int(self.room_name):
