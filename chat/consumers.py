@@ -5,7 +5,7 @@ from channels.db import database_sync_to_async
 from django.http import JsonResponse
 from api.models import Message, ActiveSession
 from django.db.models import Q
-
+from .consumers_methods import check_message_code
 class ChatRoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
@@ -70,10 +70,13 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         username = text_data_json['username']
+        code = check_message_code(message)
+
         print(text_data_json)
         self.user_ID = self.scope['user'].user_ID
         print(self.scope['user'].user_ID)
 
+        
         # Znajdowanie sesji
         room = await database_sync_to_async(ActiveSession.objects.get)(session_ID=self.room_name)
 
@@ -90,15 +93,28 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         msgLink = await database_sync_to_async(ActiveSession.objects.get)(pk=self.room_name)
         await database_sync_to_async(msgLink.messages_IDs.add)(msg)
 
+        if code == '#001':
+            #checking if everyone in session want to reveal
+            # set_user_reveal_status()
+            # check_if_reveal()
 
-        await self.channel_layer.group_send(
+            await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chatroom_message',
-                'message': message,
-                'username': username,
+                'message': '#002',
+                'username': 'server',
             }
-        )
+            )
+        elif code == '#000':
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chatroom_message',
+                    'message': message,
+                    'username': username,
+                }
+            )
 
     async def chatroom_message(self, event):
         message = event['message']
