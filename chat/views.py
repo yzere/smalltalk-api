@@ -24,6 +24,7 @@ def gather_response(func):
         if type(res) != dict:
             #zakładamy że jest tym: <class 'django.http.response.JsonResponse'>
             #dzieje się to po to, byśmy mogli w funkcjach zwracać dobrą odpowiedź json
+            json_res = copy.deepcopy(res)
             res = res._container[0].decode('utf-8')
             res = json.loads(res)
 
@@ -36,6 +37,7 @@ def gather_response(func):
                         response_object[key] = [res[key]]
                 else:
                     response_object[key] = [res[key]]
+        return json_res
     return wrapper
 
 def clear_response(func):

@@ -1,6 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
+from django.http import JsonResponse
 from api.models import Message, ActiveSession
 from django.db.models import Q
 
@@ -15,10 +16,33 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         )
         self.user_ID = self.scope["user"].user_ID
         # session = ActiveSession.objects.get(member1_ID = self.scope["user".user_ID])
-        if database_sync_to_async(ActiveSession.objects.filter)(member1_ID=2) != None:
-            session = await database_sync_to_async(ActiveSession.objects.get)(session_ID=1)
-            print(session)
-        print(self.scope['user'].user_ID)
+        try:
+            if database_sync_to_async(ActiveSession.objects.filter)(member1_ID=self.user_ID) != None:
+                session = await database_sync_to_async(ActiveSession.objects.get)(member1_ID=self.user_ID)
+            
+            elif database_sync_to_async(ActiveSession.objects.filter)(member2_ID=self.user_ID) != None:
+                session = await database_sync_to_async(ActiveSession.objects.get)(member2_ID=self.user_ID)
+                #kontynuacja tego
+        except BaseException as err:
+            session = None
+            print(f'ERROR: {err} ')
+            print(f'user {self.user_ID} has no active session')
+            await self.close()
+            return
+        
+        print(f'self.room_name: {self.room_name} | session_ID: {session.session_ID}')
+        if int(session.session_ID) == int(self.room_name):
+            print(f'session ID: {session}')
+            print(f'user ID: {self.scope["user"].user_ID}')
+            await self.accept()
+            return 
+
+        else:
+            print(f'user {self.user_ID} is not in session {self.room_name}')
+            await self.close()
+            return
+
+
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.room_group_name,
