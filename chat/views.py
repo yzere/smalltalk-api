@@ -2,7 +2,7 @@
 from multiprocessing.connection import wait
 from tabnanny import check
 from django.shortcuts import render
-from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser
+from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
 from random import choice
 import copy
 import json
@@ -340,24 +340,34 @@ def instant_abort(request):
     
 
 def index(request):
-    
     #definicje obiektów
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
+    userProfile = Profile.objects.get(pk=user)
+    usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
+    usersCircles = choice(usersCircles)
+    usersCircles = Circle.objects.get(pk=usersCircles)
+    isWaiting = 0
+    try:
+        isWaiting = WaitingRoom.objects.get(user_that_want_to_join_ID=user)
+    except WaitingRoom.DoesNotExist:
+        pass
+    #Trzeba przetestować czy to ma jakiś sens
+    if not isWaiting:
+        addWaiting = WaitingRoom(user_that_want_to_join_ID=user)
+        addWaiting.save()
+        isWaiting = WaitingRoom.objects.get(user_that_want_to_join_ID=user)
+    circlesID = Circle.objects.filter(users_IDs=user)
+    freeSessions = ActiveSession.objects.filter(member2_ID__isnull=True).filter(circle=usersCircles).values_list('pk', flat=True)
+    print(freeSessions)
 
-    freeSessions = find_free_sessions(request)
-    print('Totally empty sessions: ', freeSessions)
-
-    # Jak na jeżeli są jakieś sesje, lub nie ma sesji, to dodaje użytkownika lub tworzy sesję, pozostało: jeśeli użytkownik ma sesję to do niej dodaje
-    
-
-    if freeSessions and not ActiveSession.objects.filter(member2_ID=user_id):
+    if freeSessions and not ActiveSession.objects.filter(member1_ID=user_id) and not ActiveSession.objects.filter(member2_ID=user_id):
         randomSessionPk = choice(freeSessions)
         randomSessionObj = ActiveSession.objects.get(pk=randomSessionPk)
         randomSessionObj.member2_ID = WaitingRoom.objects.get(user_that_want_to_join_ID=user)
         randomSessionObj.save()
     elif not ActiveSession.objects.filter(member1_ID=user_id) and not ActiveSession.objects.filter(member2_ID=user_id):
-        newSession = ActiveSession(member1_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user))
+        newSession = ActiveSession(member1_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user), circle=usersCircles)
         newSession.save()
 
     if ActiveSession.objects.filter(member1_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user)):

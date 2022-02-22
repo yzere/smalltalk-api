@@ -16,8 +16,8 @@ class CustomUser(AbstractUser):
 
 class Profile(models.Model):
     profile_ID              = models.OneToOneField(CustomUser, primary_key=True, on_delete=models.CASCADE)
-    stats                   = models.JSONField(null=True)
-    social_link             = models.JSONField(null=True)
+    stats                   = models.JSONField(null=True, blank=True)
+    social_link             = models.JSONField(null=True, blank=True)
     name                    = models.CharField(max_length=50, blank=True, null=True)
     contact                 = models.CharField(max_length=50, blank=True, null=True)
     user_circles_IDs        = models.ManyToManyField('Circle', blank=True,)
@@ -37,10 +37,10 @@ class Circle(models.Model):
     expire_date             = models.DateTimeField()
     creation_date           = models.DateTimeField(auto_now_add=True)
     max_users               = models.IntegerField()
-    stats                   = models.JSONField(null=True)
+    stats                   = models.JSONField(null=True, blank=True)
     admin_users_IDs         = models.ManyToManyField('Profile', blank=True, related_name='admin_users_IDs')
     reports_IDs             = models.ManyToManyField('Report', blank=True)
-    users_IDs               = models.ManyToManyField('Profile', blank=True, related_name='users_IDs')
+    users_IDs               = models.ManyToManyField('CustomUser', blank=True, related_name='users_IDs')
 
     def __str__(self):
         return str(self.circle_ID)
@@ -94,6 +94,7 @@ class ActiveSession(models.Model):
     member1_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member1_ID', on_delete=models.DO_NOTHING, null=True)
     member2_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member2_ID', on_delete=models.DO_NOTHING, null=True)
     messages_IDs            = models.ManyToManyField('Message', blank=True)
+    circle                  = models.ForeignKey('Circle', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return str(self.session_ID)
