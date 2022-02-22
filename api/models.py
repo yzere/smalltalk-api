@@ -95,6 +95,7 @@ class ActiveSession(models.Model):
     member2_ID              = models.OneToOneField(WaitingRoom, to_field='user_that_want_to_join_ID', related_name='member2_ID', on_delete=models.DO_NOTHING, null=True)
     messages_IDs            = models.ManyToManyField('Message', blank=True)
     circle                  = models.ForeignKey('Circle', on_delete=models.CASCADE, null=True)
+    reveals                 = models.ManyToManyField('CustomUser', blank=True)
 
     def __str__(self):
         return str(self.session_ID)
