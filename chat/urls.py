@@ -16,7 +16,9 @@ urlpatterns = [
     path('instant_match/', instant_match, name='instant_match'),
     path('instant_abort/', instant_abort, name='instant_abort'),
 
-    path('add_user_to_session/<str:desired_session_id>/', add_user_to_session, name='add_user_to_session'),
+    # path('add_user_to_session/<str:desired_session_id>/<str:desired_user_id>/', add_user_to_session, name='add_user_to_session'),
     path('remove_user_from_session/<str:desired_session_id>/<str:desired_user_id>/', remove_user_from_session, name='remove_user_from_session'),
+    path('add_all_waitingroom_to_sessions/', add_all_waitingroom_to_sessions, name='add_all_waitingroom_to_sessions'),
+    
     path('<str:room_name>/', room, name='room')
 ]

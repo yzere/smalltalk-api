@@ -91,6 +91,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         # Dodawanie wiadomości do sesji
 
         msgLink = await database_sync_to_async(ActiveSession.objects.get)(pk=self.room_name)
+        print(f'msglink: {msgLink}')
         await database_sync_to_async(msgLink.messages_IDs.add)(msg)
 
         if code == '#001':
