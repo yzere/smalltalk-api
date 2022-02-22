@@ -66,6 +66,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
+    
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
@@ -91,22 +92,45 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         # Dodawanie wiadomości do sesji
 
         msgLink = await database_sync_to_async(ActiveSession.objects.get)(pk=self.room_name)
-        print(f'msglink: {msgLink}')
+        # print(f'msglink: {msgLink}')
         await database_sync_to_async(msgLink.messages_IDs.add)(msg)
 
+        # Użytkownik chce się ujawnić
         if code == '#001':
+            user = self.scope['user']
+            await database_sync_to_async(msgLink.reveals.add)(user)
+            # room.reveals.add(user)
             #checking if everyone in session want to reveal
             # set_user_reveal_status()
             # check_if_reveal()
+            session = await database_sync_to_async(ActiveSession.objects.get)(pk=self.room_name)
 
-            await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chatroom_message',
-                'message': '#002',
-                'username': 'server',
-            }
-            )
+            @database_sync_to_async
+            def get_reveals(session):
+                return list(session.reveals.all())
+
+            # @database_sync_to_async
+            # def get_users(session):
+            #     return list(session..all())
+
+            res = await get_reveals(session) #PROBLEM Z REVEALAMI I ZAPYTANIAMI
+
+            if len(res) == 2:
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'chatroom_message',
+                        'message': '#002',
+                        'username': 'server',
+                    }
+                    )
+            print(f'reveals: {res}')
+            
+        # Użytkownik rezygnuje z ujawnienia się
+        elif code == '#005':
+            user = self.scope['user']
+            await database_sync_to_async(msgLink.reveals.remove)(user)
+
         elif code == '#000':
             await self.channel_layer.group_send(
                 self.room_group_name,
