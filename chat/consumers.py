@@ -2,6 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from api.models import Message, ActiveSession
+from django.db.models import Q
 
 class ChatRoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -12,9 +13,12 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-
-        await self.accept()
-
+        self.user_ID = self.scope["user"].user_ID
+        # session = ActiveSession.objects.get(member1_ID = self.scope["user".user_ID])
+        if database_sync_to_async(ActiveSession.objects.filter)(member1_ID=2) != None:
+            session = await database_sync_to_async(ActiveSession.objects.get)(session_ID=1)
+            print(session)
+        print(self.scope['user'].user_ID)
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.room_group_name,
