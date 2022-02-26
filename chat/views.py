@@ -321,6 +321,8 @@ def add_user_to_session(request, **kwargs):
 @gather_response
 def remove_user_from_session(request, **kwargs):
     #/chat/remove_user_from_session/<session_id>/<user_id>
+    
+
     remove_all_users = False
     message = ''
     members = []
@@ -333,11 +335,10 @@ def remove_user_from_session(request, **kwargs):
         desired_user_id = kwargs['desired_user_id']
     else:
         remove_all_users = True
-        return JsonResponse({'error' : 'Bad URL!'})
 
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
-    print(desired_user_id, desired_session_id)
+
 
     if remove_all_users:
         session = ActiveSession.objects.get(session_ID = desired_session_id)
@@ -370,8 +371,13 @@ def remove_user_from_session(request, **kwargs):
             message = f'User {desired_user_id} has no active sessions.'
         
     for member in members:
-        waiting_room = WaitingRoom.objects.get(room_ID = member.room_ID)
-        waiting_room.delete();
+        try:
+            waiting_room = WaitingRoom.objects.get(room_ID = member.room_ID)
+            waiting_room.delete();
+        except BaseException as err:
+            print(err)
+
+
         # waiting_room.save()
         # print(f'member {member}')
         # print(f'member_user {member_user}')
@@ -474,7 +480,41 @@ def get_room_id(request):
     else:
         message = session.session_ID
     return JsonResponse({'message': message})
+
+def get_room_messages(request):
+    user_id = request.user.user_ID
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    session = find_user_session(request)[0]
+    if session:
+        session_id = session.session_ID
+
+    msg_list = []
+    messages = Message.objects.filter(active_session_ID=session_id)
+    for msg in messages:
+        msg_list.append({
+            'id': msg.message_ID,
+            'message': msg.content,
+            'username': 'anonymous' 
+        }) 
     
+    return JsonResponse({'content': msg_list})
+
+
+def close_session(request): #czyści sesję z wiadomości i przygotowuje do następnego matcha
+    user_id = request.user.user_ID
+    user = get_object_or_404(CustomUser, pk=user_id)
+    session = find_user_session(request)[0]
+    if session:
+        session_id = session.session_ID
+        messages = Message.objects.filter(active_session_ID=session_id)
+        messages.delete()
+        remove_user_from_session(request, desired_session_id=session_id, desired_user_id=False)
+        session.delete() #opcjonalne
+        return JsonResponse({'message': 'Messages deleted and session cleared.'})
+    else:
+        return JsonResponse({'message': 'No session to close.'})
+
 
 #Paczki
 def instant_match(request):

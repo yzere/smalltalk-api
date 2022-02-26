@@ -22,5 +22,7 @@ urlpatterns = [
     path('add_all_waitingroom_to_sessions/', add_all_waitingroom_to_sessions, name='add_all_waitingroom_to_sessions'),
     
     path('get_room_id/', get_room_id, name='get_room_id'),
+    path('get_room_messages/', get_room_messages, name='get_room_messages'),
+    path('close_session/', close_session, name='close_session'),
     path('<str:room_name>/', room, name='room')
 ]
