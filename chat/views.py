@@ -1,5 +1,4 @@
 
-from multiprocessing.connection import wait
 from tabnanny import check
 from django.shortcuts import render, get_object_or_404
 from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
@@ -21,8 +20,10 @@ from chat.views_methods import ( find_free_sessions,
 #   /join_waitingroom
 #   ...czekanie na odpowiedź serwera, z przydzielonym numerem pokoju
 #   ...pisanie na czacie (patrz: consumers.py, tam cała mechanika)
-#    /leave_session (wyjście z pokoju)
-#    /leave_waitingroom (wyjście z poczekalni)
+#   /leave_session (wyjście z pokoju) - wyjście z sesji nie usuwa waitingroomu
+#   /leave_waitingroom (wyjście z poczekalni)
+#
+#   /get_room_id - pobieranie ID przydzielonego pokoju
 
 
 
@@ -395,7 +396,11 @@ def add_all_waitingroom_to_sessions(request):
     message = ''
     if not WaitingRoom.objects.exists():
         message = f'Aborting operation, there are no waiting users!'
-    waitingrooms = WaitingRoom.objects.all()
+    waitingrooms = WaitingRoom.objects.filter(active_sessions_IDs = None)
+    print(f'waitingrooms: {waitingrooms}')
+    if not waitingrooms:
+        return JsonResponse({'message': 'No users waiting for match.'})
+
     users_to_match = waitingrooms.count()
     # sessions = ActiveSession.objects.all()
     if ActiveSession.objects.exists():
@@ -431,26 +436,28 @@ def add_all_waitingroom_to_sessions(request):
     free_sessions = find_free_sessions()
     # print(free_sessions)
     if free_sessions:
-        sessions = ActiveSession.objects.all()
+        sessions = ActiveSession.objects.filter(pk__in=free_sessions)
         stop_flag = False
+        pointer = 0
         members = {0: 'member1_ID', 1: 'member2_ID'}
-        for j in range(len(free_sessions)):
+        for j in range(len(sessions)):
             ses = sessions[j]
-            for i in range(len(waitingrooms)):    
-                for k in range(2):
-                    if getattr(ses, members[k]) == None:
-                        waitingroom = waitingrooms[i]
-                        setattr(ses, members[k], waitingroom)
-                        waitingroom.active_sessions_IDs = ses
-                        waitingroom.save()
-                        i += 1 
-                        if i > len(waitingrooms)-1:
-                            stop_flag = True
-                            break
-                if stop_flag:
-                    break
-            if not stop_flag:
-                ses.save()
+            for k in range(2):
+                if getattr(ses, members[k]) == None:
+                    if pointer > len(waitingrooms)-1:
+                        break
+                    waitingroom = waitingrooms[pointer]
+                    setattr(ses, members[k], waitingroom)
+                    waitingroom.active_sessions_IDs = ses
+                    waitingroom.save()
+                    pointer += 1 
+                    if pointer > len(waitingrooms)-1:
+                        stop_flag = True
+                        break
+            
+            ses.save()
+  
+                
 
     message = 'Everything done.'
     return JsonResponse({'message': message})
@@ -459,12 +466,13 @@ def get_room_id(request):
     user_id = request.user.user_ID
     user = get_object_or_404(CustomUser, pk=user_id)
 
-    session = find_user_session(request)
-    if session[0] == None:
+    session_tuple = find_user_session(request)
+    session = session_tuple[0]
+    if session == None:
         message = f'User {user_id} not matched to session yet.'
         
     else:
-        message = f'User belongs to session {session.session_ID}'
+        message = session.session_ID
     return JsonResponse({'message': message})
     
 

@@ -30,13 +30,13 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         except BaseException as err:
             penalty += 1;
         
-        if penalty > 1:
-            session = None
-            print(f'ERROR: {err} ')
-            print(f'user {self.user_ID} has no active session')
-            await self.close()
-            penalty = 0
-            return
+            if penalty > 1:
+                session = None
+                print(f'ERROR: {err} ')
+                print(f'user {self.user_ID} has no active session')
+                await self.close()
+                penalty = 0
+                return
         else: 
             penalty = 0
         # else:
