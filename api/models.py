@@ -79,7 +79,7 @@ class Report(models.Model):
 
 class WaitingRoom(models.Model):
     room_ID                     = models.AutoField(primary_key=True)
-    user_that_want_to_join_ID   = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
+    user_that_want_to_join_ID   = models.OneToOneField('CustomUser', on_delete=models.DO_NOTHING)
     active_sessions_IDs         = models.ForeignKey('ActiveSession', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):

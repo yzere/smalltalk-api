@@ -20,11 +20,11 @@ def find_free_sessions():
     #     addWaiting = WaitingRoom(user_that_want_to_join_ID=user)
     #     addWaiting.save()
     if not ActiveSession.objects.exists():
-        return (None, None)
+        return None
     freeSessions = ActiveSession.objects.filter(Q(member2_ID__isnull=True) | Q(member1_ID__isnull=True)).values_list('pk', flat=True)
     # freeSessions += ActiveSession.objects.filter(member1_ID__isnull=True).values_list('pk', flat=True)
     if not freeSessions:
-        return (None, None)
+        return None
     return freeSessions
 
 def find_user_session(request):
@@ -48,6 +48,15 @@ def find_user_session(request):
 
 def find_user_waitingroom_object(request):
     user_id = request.user.user_ID
+    user = CustomUser.objects.get(pk=user_id)
+
+    if WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):
+        user_object = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)
+        return user_object
+    else:
+        return None
+
+def find_user_waitingroom_object_by_ID(user_id):
     user = CustomUser.objects.get(pk=user_id)
 
     if WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):

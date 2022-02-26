@@ -1,7 +1,7 @@
 
 from multiprocessing.connection import wait
 from tabnanny import check
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
 from random import choice
 import copy
@@ -12,8 +12,18 @@ from chat.views_methods import ( find_free_sessions,
  find_user_session,
  find_user_waitingroom_object,
  choose_session,
- check_if_session_free
+ check_if_session_free,
+ find_user_waitingroom_object_by_ID
   )
+
+#   FLOW UŻYTKOWNIKA:
+#
+#   /join_waitingroom
+#   ...czekanie na odpowiedź serwera, z przydzielonym numerem pokoju
+#   ...pisanie na czacie (patrz: consumers.py, tam cała mechanika)
+#    /leave_session (wyjście z pokoju)
+#    /leave_waitingroom (wyjście z poczekalni)
+
 
 
 response_object = {}
@@ -193,7 +203,7 @@ def leave_waitingroom(request):
 
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
-
+    
     if WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):
         waiting_room = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)
         waiting_room.delete()
@@ -207,94 +217,105 @@ def leave_waitingroom(request):
 
         })
 
-# @gather_response
-# def add_user_to_session(request, **kwargs):
-#     #/chat/add_user_to_session/<session_id>/    <user_id>
-#     WAITINGROOM_NEEDED = True
-#     print(f'REQUEST: {request}')
-#     if int(kwargs['desired_user_id']):
-#         user_id = int(kwargs['desired_user_id'])
-#         user = CustomUser.objects.get(pk=user_id)
+@gather_response
+def add_user_to_session(request, **kwargs):
+    #/chat/add_user_to_session/<session_id>/    <user_id>
+    WAITINGROOM_NEEDED = True
+    print(f'REQUEST: {request}')
+    if int(kwargs['desired_user_id']):
+        user_id = int(kwargs['desired_user_id'])
+        user = get_object_or_404(CustomUser, pk=user_id)
 
-#         message = 'from desired user'
-        
-#         if (ActiveSession.objects.filter(member1_ID = user_id).exists() or 
-#         ActiveSession.objects.filter(member2_ID = user_id).exists()):
-#             message = f'User {user_id} already in session.'
+        message = 'from desired user'
+        # if not user:
+        #     message = f'User {user_id} not found.'
 
-#         m1 = ActiveSession.objects.filter(member1_ID = None)
-#         if m1 == None:
-#             m2 = ActiveSession.objects.filter(member2_ID = None)
-#             if m2 == None:
-#                 #sprawdzanie warunku bycia w waitingroomie
-#                 new_session = ActiveSession(member1_ID = user)
-#                 new_session.save()
-#                 session_id = new_session.session_ID
+        if (ActiveSession.objects.filter(member1_ID = user_id).exists() or 
+        ActiveSession.objects.filter(member2_ID = user_id).exists()):
+            message = f'User {user_id} already in session.'
 
-#                 waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
-#                 waitingroom.active_sessions_IDs = new_session
-#                 waitingroom.save()
+        else:
+            m1 = ActiveSession.objects.filter(member1_ID = None)
+            if not m1:
+                m2 = ActiveSession.objects.filter(member2_ID = None)
+                if not m2 :
+                    #sprawdzanie warunku bycia w waitingroomie
+                    new_session = ActiveSession(member1_ID = find_user_waitingroom_object_by_ID(user_id))
+                    new_session.save()
+                    session_id = new_session.session_ID
 
-#                 message = f'Created new session {session_id} and added user {user_id}.'
-#             else:
-#                 session = m2.last()
-#                 session.member2_ID = 
+                    waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
+                    waitingroom.active_sessions_IDs = new_session
+                    waitingroom.save()
 
-#     else:
-#         user_id = request.user.user_ID
-#         user = CustomUser.objects.get(pk=user_id)
+                    message = f'Created new session {session_id} and added user {user_id}.'
+                else:
+                    session = m2.last()
+                    session_id = session.session_ID
+                    session.member2_ID = find_user_waitingroom_object_by_ID(user_id)
+                    message = f'Found {session_id} and added user {user_id}.'
+            else:
+                session = m1.last()
+                session_id = session.session_ID
+                session.member1_ID = find_user_waitingroom_object_by_ID(user_id)
+                message = f'Found {session_id} and added user {user_id}.'
+            session.save()
+
+    else:
+        user_id = request.user.user_ID
+        user = CustomUser.objects.get(pk=user_id)
     
 
-#         if int(kwargs['desired_session_id']):
-#             desired_session_id = kwargs['desired_session_id']
-#         else:
-#             return JsonResponse({'error' : 'Bad URL!'})
+        if int(kwargs['desired_session_id']):
+            desired_session_id = kwargs['desired_session_id']
+        else:
+            return JsonResponse({'error' : 'Bad URL!'})
 
-#         message = ''
-#         print(desired_session_id)
+        message = ''
+        print(desired_session_id)
 
-#         if find_user_session(request)[1] != None:
-#             message = f'User {user_id} already in session of id {find_user_session(request)[0]}'
-#         else: 
-#             free_session = check_if_session_free(request, desired_session_id)
-#             if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
-#                 print('z waiti')
-#                 message = f'Prior to being added to the session you need to join the waitingroom.'
+        if find_user_session(request)[1] != None:
+            message = f'User {user_id} already in session of id {find_user_session(request)[0]}'
+        else: 
+            free_session = check_if_session_free(request, desired_session_id)
+            if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
+                print('z waiti')
+                message = f'Prior to being added to the session you need to join the waitingroom.'
 
-#             #jeżeli dana sesja nie jest wolna
-#             elif not free_session:
-#                 #sprawdź, czy jest zajęta, czy jeszcze nie stworzona 
-#                 if not ActiveSession.objects.get(session_ID = desired_session_id):
-#                     new_session = ActiveSession(member1_ID = user, session_ID = desired_session_id)
-#                     new_session.save()
-#                     session_id = new_session.session_ID
+            #jeżeli dana sesja nie jest wolna
+            elif not free_session:
+                #sprawdź, czy jest zajęta, czy jeszcze nie stworzona 
+                if not ActiveSession.objects.get(session_ID = desired_session_id):
+                    new_session = ActiveSession(member1_ID = find_user_waitingroom_object_by_ID(user_id), session_ID = desired_session_id)
+                    new_session.save()
+                    session_id = new_session.session_ID
 
-#                     waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
-#                     waitingroom.active_sessions_IDs = new_session
-#                     waitingroom.save()
+                    waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
+                    waitingroom.active_sessions_IDs = new_session
+                    waitingroom.save()
 
-#                     message = f'Created new session {session_id} and added user {user_id}.'
-#                 else:
-#                     message = f'Desired session {session_id} is full!.'
+                    message = f'Created new session {session_id} and added user {user_id}.'
+                else:
+                    message = f'Desired session {session_id} is full!.'
 
-#             #jeżeli sesja jest wolna (czyli ma co najmniej jedno wolne miejsce), dodaj tam użytkownika
-#             else:
-#                 chosen_session = ActiveSession.objects.get(session_ID = desired_session_id)
-#                 if chosen_session.member1_ID == None:
-#                     chosen_session.member1_ID = find_user_waitingroom_object(request)
-#                 else:
-#                     chosen_session.member2_ID = find_user_waitingroom_object(request)
-#                 # chosen_session[0][f'member{chosen_session[1]}_ID'] = user_id
-#                 chosen_session.save()
+            #jeżeli sesja jest wolna (czyli ma co najmniej jedno wolne miejsce), dodaj tam użytkownika
+            else:
+                chosen_session = ActiveSession.objects.get(session_ID = desired_session_id)
+                if chosen_session.member1_ID == None:
+                    chosen_session.member1_ID = find_user_waitingroom_object(request)
+                else:
+                    chosen_session.member2_ID = find_user_waitingroom_object(request)
+                # chosen_session[0][f'member{chosen_session[1]}_ID'] = user_id
+                chosen_session.save()
                 
-#                 session_id = chosen_session.session_ID
-#                 waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
-#                 waitingroom.active_sessions_IDs = chosen_session
-#                 waitingroom.save()
+                session_id = chosen_session.session_ID
+                waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
+                waitingroom.active_sessions_IDs = chosen_session
+                waitingroom.save()
 
-#                 message = f'Added user {user_id} to session {session_id}'
+                message = f'Added user {user_id} to session {session_id}'
 
-#     return JsonResponse({'message' : message})
+    return JsonResponse({'message' : message})
 
 @gather_response
 def remove_user_from_session(request, **kwargs):
@@ -369,6 +390,7 @@ def remove_user_from_session(request, **kwargs):
             'message': message
         })
 
+@gather_response
 def add_all_waitingroom_to_sessions(request):
     message = ''
     if not WaitingRoom.objects.exists():
@@ -378,6 +400,8 @@ def add_all_waitingroom_to_sessions(request):
     # sessions = ActiveSession.objects.all()
     if ActiveSession.objects.exists():
         sessions = find_free_sessions()
+        if not sessions:
+            return JsonResponse({'message': 'No free sessions'})
         free_seats = 0
         for ses in sessions:
             session_object = ActiveSession.objects.get(session_ID = ses)
@@ -403,13 +427,47 @@ def add_all_waitingroom_to_sessions(request):
         print(f'Preparing {lacking_sessions} sessions...')
         message += f'Created session of id {ses.session_ID}'
         ses.save()
-
-
-
+    
+    free_sessions = find_free_sessions()
+    # print(free_sessions)
+    if free_sessions:
+        sessions = ActiveSession.objects.all()
+        stop_flag = False
+        members = {0: 'member1_ID', 1: 'member2_ID'}
+        for j in range(len(free_sessions)):
+            ses = sessions[j]
+            for i in range(len(waitingrooms)):    
+                for k in range(2):
+                    if getattr(ses, members[k]) == None:
+                        waitingroom = waitingrooms[i]
+                        setattr(ses, members[k], waitingroom)
+                        waitingroom.active_sessions_IDs = ses
+                        waitingroom.save()
+                        i += 1 
+                        if i > len(waitingrooms)-1:
+                            stop_flag = True
+                            break
+                if stop_flag:
+                    break
+            if not stop_flag:
+                ses.save()
 
     message = 'Everything done.'
     return JsonResponse({'message': message})
+
+def get_room_id(request):
+    user_id = request.user.user_ID
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    session = find_user_session(request)
+    if session[0] == None:
+        message = f'User {user_id} not matched to session yet.'
+        
+    else:
+        message = f'User belongs to session {session.session_ID}'
+    return JsonResponse({'message': message})
     
+
 #Paczki
 def instant_match(request):
     join_waitingroom(request)
