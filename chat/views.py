@@ -7,13 +7,14 @@ import copy
 import math
 import json
 from django.http import JsonResponse
-from chat.views_methods import ( find_free_sessions,
- find_user_session,
- find_user_waitingroom_object,
- choose_session,
- check_if_session_free,
- find_user_waitingroom_object_by_ID
-  )
+from chat.views_methods import (    find_free_sessions,
+                                    find_user_session,
+                                    find_user_waitingroom_object,
+                                    choose_session,
+                                    check_if_session_free,
+                                    find_user_waitingroom_object_by_ID,
+                                    find_free_sessions_circle_match
+                                )
 
 #   FLOW UŻYTKOWNIKA:
 #
@@ -121,15 +122,20 @@ def leave_session(request):
         })
 
 @gather_response
-def join_session(request):
+def join_session(request):                                                                      ##### Testy!!!!!!!!!!!
 
     WAITINGROOM_NEEDED = True #jak na razie i tak trzeba w nim być
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
     message = 'placeholder'
+    # Do testowania (najpierw trzeba dodać circle)
+    usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
+    usersCircles = choice(usersCircles)
+    usersCircle = Circle.objects.get(pk=usersCircles)
+    #
     
     if not ActiveSession.objects.exists():
-        new_session = ActiveSession(member1_ID = find_user_waitingroom_object(request))
+        new_session = ActiveSession(member1_ID = find_user_waitingroom_object(request), circle = usersCircle)         # Dodano circle, do testów
         new_session.save()
         session_id = new_session.session_ID
 
@@ -142,22 +148,28 @@ def join_session(request):
     elif find_user_session(request)[1] != None:
         message = f'User {user_id} already in session of id {find_user_session(request)[0]}'
     else: 
-        free_sessions = find_free_sessions()
+        free_sessions = find_free_sessions_circle_match(request)                                                       # Dodano circle, do testów
         if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
             print('z waiti')
             message = f'Prior to being added to the session you need to join the waitingroom.'
         
         elif not free_sessions:
             #sprawdzanie warunku bycia w waitingroomie
-            new_session = ActiveSession(member1_ID = user)
-            new_session.save()
-            session_id = new_session.session_ID
+            try:
+                waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user)
+            except WaitingRoom.DoesNotExist:
+                waitingroom = False
+            
+            if waitingroom:
+                new_session = ActiveSession(member1_ID = waitingroom, circle = usersCircle)
+                new_session.save()
+                session_id = new_session.session_ID
 
-            waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
-            waitingroom.active_sessions_IDs = new_session
-            waitingroom.save()
+            #waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
+                waitingroom.active_sessions_IDs = new_session
+                waitingroom.save()
 
-            message = f'Created new session {session_id} and added user {user_id}.'
+                message = f'Created new session {session_id} and added user {user_id}.'
         
         else:
             chosen_session = choose_session(free_sessions)
@@ -532,7 +544,7 @@ def instant_abort(request):
 def index(request):
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
-    userProfile = Profile.objects.get(pk=user)
+    #userProfile = Profile.objects.get(pk=user)
     usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
     usersCircles = choice(usersCircles)
     usersCircles = Circle.objects.get(pk=usersCircles)

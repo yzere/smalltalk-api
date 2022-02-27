@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser
+from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
 from random import choice
 from django.db.models import Q
 
@@ -21,8 +21,31 @@ def find_free_sessions():
     #     addWaiting.save()
     if not ActiveSession.objects.exists():
         return None
+    
     freeSessions = ActiveSession.objects.filter(Q(member2_ID__isnull=True) | Q(member1_ID__isnull=True)).values_list('pk', flat=True)
     # freeSessions += ActiveSession.objects.filter(member1_ID__isnull=True).values_list('pk', flat=True)
+    if not freeSessions:
+        return None
+    return freeSessions
+
+def find_free_sessions_circle_match(request):                                       # bardzo jestem ciekawy, czy to działa, jeśli działa, to chyba można podmienić z find_free_sessions, ale nie wiem, czy gdzieś nie jest jeszcze do czegoś innego używana tamta
+    user_id = request.user.user_ID                                                  # Wygląda na to, że działa
+    user = CustomUser.objects.get(pk=user_id)
+    if not ActiveSession.objects.exists():
+        return None
+    usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
+    freeSessions = False
+    i = 0
+    while not freeSessions:
+        try:
+            freeSessions = ActiveSession.objects.filter(Q(member2_ID__isnull=True) | Q(member1_ID__isnull=True), circle = Circle.objects.get(pk = usersCircles[i])).values_list('pk', flat=True)
+        except ActiveSession.DoesNotExist:
+            pass
+        if i < len(usersCircles)-1:
+            i += 1
+        else:
+            break
+
     if not freeSessions:
         return None
     return freeSessions
