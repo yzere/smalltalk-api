@@ -6,7 +6,7 @@ from .views import *
 urlpatterns = [
     path('', index, name='index'),
 
-    path('find_session/', find_session, name='find_session'),
+    # path('find_session/', find_session, name='find_session'),
     path('leave_session/', leave_session, name='leave_session'),
     path('join_session/', join_session, name='join_session'),
 

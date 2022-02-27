@@ -80,12 +80,32 @@ def check_if_staff(func):
             })
     return wrapper
 
+def check_if_superuser(func):
+    def wrapper(*args, **kwargs):
+        try:
+            request = args[0]
+        except BaseException as err:
+            return JsonResponse({
+                'error': f'ERROR: {err}'
+            })
+        
+        user_id = request.user.user_ID
+        user = CustomUser.objects.get(pk=user_id)
+        if user.is_superuser:
+            return func(*args, **kwargs)
+        else:
+            return JsonResponse({
+                'error': f'Too low permission level.'
+            })
+    return wrapper
+
 @clear_response
 def send_response(res):
     return JsonResponse(res)
 
 #VIEWS
 # Create your views here.
+#do usunięcia
 @gather_response
 def find_session(request):
     return JsonResponse({'session_id': 1})
@@ -219,7 +239,7 @@ def leave_waitingroom(request):
         })
 
 @gather_response
-def add_user_to_session(request, **kwargs):
+def add_user_to_session(request, **kwargs): #DO POPRAWY DODAWANIE DO DOBREJ SESJI
     #/chat/add_user_to_session/<session_id>/    <user_id>
     WAITINGROOM_NEEDED = True
     print(f'REQUEST: {request}')
