@@ -122,81 +122,6 @@ def leave_session(request):
         })
 
 @gather_response
-def join_session(request):                                                                      ##### Testy!!!!!!!!!!!
-
-    WAITINGROOM_NEEDED = True #jak na razie i tak trzeba w nim być
-    user_id = request.user.user_ID
-    user = CustomUser.objects.get(pk=user_id)
-    message = 'placeholder'
-    # Do testowania (najpierw trzeba dodać circle)
-    usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
-    usersCircles = choice(usersCircles)
-    usersCircle = Circle.objects.get(pk=usersCircles)
-    #
-    
-    if not ActiveSession.objects.exists():
-        new_session = ActiveSession(member1_ID = find_user_waitingroom_object(request), circle = usersCircle)         
-        new_session.save()
-        session_id = new_session.session_ID
-
-        waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
-        waitingroom.active_sessions_IDs = new_session
-        waitingroom.save()
-
-        message = f'Created new session {session_id} and added user {user_id}.'
-        
-    elif find_user_session(request)[1] != None:
-        message = f'User {user_id} already in session of id {find_user_session(request)[0]}'
-    else: 
-        free_sessions = find_free_sessions_circle_match(request)                                                                         
-        if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
-            print('z waiti')
-            message = f'Prior to being added to the session you need to join the waitingroom.'
-        
-        elif not free_sessions:
-            #sprawdzanie warunku bycia w waitingroomie                                              Trzeba ogarnąć, czy nie sprawdzamy warunku 2x
-            try:
-                waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user)
-            except WaitingRoom.DoesNotExist:
-                waitingroom = False
-            
-            if waitingroom:
-                new_session = ActiveSession(member1_ID = waitingroom, circle = usersCircle)
-                new_session.save()
-                session_id = new_session.session_ID
-
-            #waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
-                waitingroom.active_sessions_IDs = new_session
-                waitingroom.save()
-
-                message = f'Created new session {session_id} and added user {user_id}.'
-            elif not waitingroom:
-                message = f'Prior to being added to the session you need to join the waitingroom.'
-        
-        else:
-            chosen_session = choose_session(free_sessions)
-            print(free_sessions, chosen_session)
-            if chosen_session.member1_ID == None:
-                chosen_session.member1_ID = find_user_waitingroom_object(request)
-            else:
-                chosen_session.member2_ID = find_user_waitingroom_object(request)
-            # chosen_session[0][f'member{chosen_session[1]}_ID'] = user_id
-            chosen_session.save()
-            
-            session_id = chosen_session.session_ID
-            waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
-            waitingroom.active_sessions_IDs = chosen_session
-            waitingroom.save()
-            
-            
-            message = f'Chosen session {session_id} and added user {user_id}.'
-
-    # print(ActiveSession.objects.filter(member2_ID=user.user_ID))
-    return JsonResponse({   
-            'message': message
-        })
-
-@gather_response
 def join_waitingroom(request):
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
@@ -231,6 +156,89 @@ def leave_waitingroom(request):
             'message': message
 
         })
+
+@gather_response
+def join_session(request):
+
+    WAITINGROOM_NEEDED = True #jak na razie i tak trzeba w nim być
+    user_id = request.user.user_ID
+    user = CustomUser.objects.get(pk=user_id)
+    message = 'placeholder'
+    # Do testowania (najpierw trzeba dodać circle)
+    usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
+    usersCircles = choice(usersCircles)
+    usersCircle = Circle.objects.get(pk=usersCircles)
+    # Check WaitingRoom
+    try:
+        waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user)
+    except WaitingRoom.DoesNotExist:
+        #join_waitingroom(request)               # Jeżeli chcemy mieć automatyczne dodawanie do WaitingRoom
+        message = f'Prior to being added to the session you need to join the waitingroom.'              # Jeżeli chcemy po prostu walnąć errora
+        waitingroom = False
+    # Chyba może się przydać ^
+
+    if not ActiveSession.objects.exists() and waitingroom:
+        new_session = ActiveSession(member1_ID = find_user_waitingroom_object(request), circle = usersCircle)         
+        new_session.save()
+        session_id = new_session.session_ID
+
+        #waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
+        waitingroom.active_sessions_IDs = new_session
+        waitingroom.save()
+
+        message = f'Created new session {session_id} and added user {user_id}.'
+        
+    elif find_user_session(request)[1] != None and waitingroom:
+        message = f'User {user_id} already in session of id {find_user_session(request)[0]}'
+    else: 
+        free_sessions = find_free_sessions_circle_match(request)                                                                         
+        if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
+            print('z waiti')
+            message = f'Prior to being added to the session you need to join the waitingroom.'
+        
+        elif not free_sessions and waitingroom:
+            #sprawdzanie warunku bycia w waitingroomie                                              Trzeba ogarnąć, czy nie sprawdzamy warunku 2x
+            #try:
+            #    waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user)
+            #except WaitingRoom.DoesNotExist:
+            #    waitingroom = False
+            
+            if waitingroom:
+                new_session = ActiveSession(member1_ID = waitingroom, circle = usersCircle)
+                new_session.save()
+                session_id = new_session.session_ID
+
+            #waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
+                waitingroom.active_sessions_IDs = new_session
+                waitingroom.save()
+
+                message = f'Created new session {session_id} and added user {user_id}.'
+            elif not waitingroom:
+                message = f'Prior to being added to the session you need to join the waitingroom.'
+        
+        else:
+            chosen_session = choose_session(free_sessions)
+            print(free_sessions, chosen_session)
+            if chosen_session.member1_ID == None:
+                chosen_session.member1_ID = find_user_waitingroom_object(request)
+            else:
+                chosen_session.member2_ID = find_user_waitingroom_object(request)
+            # chosen_session[0][f'member{chosen_session[1]}_ID'] = user_id
+            chosen_session.save()
+            
+            session_id = chosen_session.session_ID
+            #waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)            
+            waitingroom.active_sessions_IDs = chosen_session
+            waitingroom.save()
+            
+            
+            message = f'Chosen session {session_id} and added user {user_id}.'
+
+    # print(ActiveSession.objects.filter(member2_ID=user.user_ID))
+    return JsonResponse({   
+            'message': message
+        })
+
 
 @gather_response
 def add_user_to_session(request, **kwargs):
@@ -412,7 +420,7 @@ def remove_user_from_session(request, **kwargs):
         })
 
 @gather_response
-def add_all_waitingroom_to_sessions(request):
+def add_all_waitingroom_to_sessions(request):                                                               # nie wiem, czy nie trzeba będzie tego jakoś przepisać
     message = ''
     if not WaitingRoom.objects.exists():
         message = f'Aborting operation, there are no waiting users!'
