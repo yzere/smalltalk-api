@@ -4,7 +4,9 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('', index, name='index'),
+    path('index', index, name='index'),
+
+    path('', root, name='root'),
 
     path('find_session/', find_session, name='find_session'),
     path('leave_session/', leave_session, name='leave_session'),
