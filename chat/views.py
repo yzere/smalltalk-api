@@ -1,7 +1,7 @@
 
 from tabnanny import check
 from django.shortcuts import render, get_object_or_404
-from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle, IDs
+from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
 from random import choice
 import copy
 import math
@@ -530,9 +530,6 @@ def instant_abort(request):
 
 
 def index(request):
-    #definicje obiektów
-    #id = IDs()
-    #id.save()
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
     userProfile = Profile.objects.get(pk=user)
@@ -589,5 +586,5 @@ def room(request, room_name):
     })
 
 def root(request):
-    
+
     return render(request, 'base.html', {})
