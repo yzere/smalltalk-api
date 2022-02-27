@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from api.models import CustomUser, Message, ActiveSession
 from django.db.models import Q
 from .consumers_methods import check_message_code
+from .notifications import *
 # from views import close_session
 # import requests_async as requests
 
@@ -188,6 +189,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
             await database_sync_to_async(msgLink.reveals.remove)(user)
 
         elif code == '#000':
+            # send_test_notification()
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
