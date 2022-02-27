@@ -135,7 +135,7 @@ def join_session(request):                                                      
     #
     
     if not ActiveSession.objects.exists():
-        new_session = ActiveSession(member1_ID = find_user_waitingroom_object(request), circle = usersCircle)         # Dodano circle, do testów
+        new_session = ActiveSession(member1_ID = find_user_waitingroom_object(request), circle = usersCircle)         
         new_session.save()
         session_id = new_session.session_ID
 
@@ -148,13 +148,13 @@ def join_session(request):                                                      
     elif find_user_session(request)[1] != None:
         message = f'User {user_id} already in session of id {find_user_session(request)[0]}'
     else: 
-        free_sessions = find_free_sessions_circle_match(request)                                                       # Dodano circle, do testów
+        free_sessions = find_free_sessions_circle_match(request)                                                                         
         if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
             print('z waiti')
             message = f'Prior to being added to the session you need to join the waitingroom.'
         
         elif not free_sessions:
-            #sprawdzanie warunku bycia w waitingroomie
+            #sprawdzanie warunku bycia w waitingroomie                                              Trzeba ogarnąć, czy nie sprawdzamy warunku 2x
             try:
                 waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user)
             except WaitingRoom.DoesNotExist:
@@ -170,6 +170,8 @@ def join_session(request):                                                      
                 waitingroom.save()
 
                 message = f'Created new session {session_id} and added user {user_id}.'
+            elif not waitingroom:
+                message = f'Prior to being added to the session you need to join the waitingroom.'
         
         else:
             chosen_session = choose_session(free_sessions)
