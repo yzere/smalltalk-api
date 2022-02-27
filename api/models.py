@@ -20,7 +20,7 @@ class Profile(models.Model):
     social_link             = models.JSONField(null=True, blank=True)
     name                    = models.CharField(max_length=50, blank=True, null=True)
     contact                 = models.CharField(max_length=50, blank=True, null=True)
-    user_circles_IDs        = models.ManyToManyField('Circle', blank=True,)
+    user_circles_IDs        = models.ManyToManyField('Circle', blank=True,)         # to chyba nawet też nie potrzebne
 
     def __str__(self):
         return str(self.profile_ID)

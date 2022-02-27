@@ -537,6 +537,25 @@ def close_session(request): #czyści sesję z wiadomości i przygotowuje do nast
     else:
         return JsonResponse({'message': 'No session to close.'})
 
+#@gather_response           Nie do końca wiem czy musi być ten dekorator
+def join_circle(request, **kwargs):
+    #/chat/join_circle/<circle_id>
+    message = ''
+    if kwargs['desired_circle_id']:
+        desired_circle_id = kwargs['desired_circle_id']                # do późniejszej zmiany na jakiś kod
+    else:
+        return JsonResponse({'error' : 'Bad URL!'})
+    user_id = request.user.user_ID
+    user = CustomUser.objects.get(pk=user_id)
+    #coś co przetworzy nam późniejszy kod na circle_id
+    # jakieś zabezpieczenia
+    circle = Circle.objects.get(pk = desired_circle_id)
+    circle.users_IDs.add(user)
+    message = f'User {user_id} has been added to the circle {desired_circle_id}.'
+    
+    return JsonResponse({   
+            'message': message
+        })
 
 #Paczki
 def instant_match(request):
