@@ -549,9 +549,40 @@ def join_circle(request, **kwargs):
     user = CustomUser.objects.get(pk=user_id)
     #coś co przetworzy nam późniejszy kod na circle_id
     # jakieś zabezpieczenia
-    circle = Circle.objects.get(pk = desired_circle_id)
+    try:
+        circle = Circle.objects.get(pk = desired_circle_id)
+    except Circle.DoesNotExist:
+        message = f'Circle {desired_circle_id} not found.'
+        return JsonResponse({   
+            'message': message
+        })
     circle.users_IDs.add(user)
     message = f'User {user_id} has been added to the circle {desired_circle_id}.'
+    
+    return JsonResponse({   
+            'message': message
+        })
+
+def leave_circle(request, **kwargs):            # do testów server nie działą
+    #/chat/join_circle/<circle_id>
+    message = ''
+    if kwargs['desired_circle_id']:
+        desired_circle_id = kwargs['desired_circle_id']                # do późniejszej zmiany na jakiś kod
+    else:
+        return JsonResponse({'error' : 'Bad URL!'})
+    user_id = request.user.user_ID
+    user = CustomUser.objects.get(pk=user_id)
+    #coś co przetworzy nam późniejszy kod na circle_id
+    # jakieś zabezpieczenia
+    try:
+        circle = Circle.objects.get(pk = desired_circle_id)
+    except Circle.DoesNotExist:
+        message = f'Circle {desired_circle_id} not found.'
+        return JsonResponse({   
+            'message': message
+        })
+    circle.users_IDs.remove(user)
+    message = f'User {user_id} has been removed from the circle {desired_circle_id}.'
     
     return JsonResponse({   
             'message': message

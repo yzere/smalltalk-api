@@ -27,5 +27,6 @@ urlpatterns = [
     path('get_room_messages/', get_room_messages, name='get_room_messages'),
     path('close_session/', close_session, name='close_session'),
     path('join_circle/<str:desired_circle_id>/', join_circle, name='join_circle'),
+    path('leave_circle/<str:desired_circle_id>/', leave_circle, name='leave_circle'),
     path('<str:room_name>/', room, name='room')
 ]
