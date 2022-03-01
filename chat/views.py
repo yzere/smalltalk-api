@@ -225,7 +225,9 @@ def leave_waitingroom(request):
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
     
-    if WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):
+    if find_user_session(request)[0]:
+        message = f'Prior to leaving waitingroom you need to leave session.'
+    elif WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):
         waiting_room = WaitingRoom.objects.get(user_that_want_to_join_ID = user_id)
         waiting_room.delete()
         # waiting_room.save()
@@ -548,6 +550,12 @@ def instant_abort(request):
     leave_waitingroom(request)
     return send_response()
 
+def panel(request):
+    return render(request, 'panel.html',
+    {
+        'user': request.user
+    })
+    
 
 def index(request):
     #definicje obiektów
