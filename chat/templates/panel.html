@@ -11,6 +11,7 @@
     <div id="root">
         <h1>{{user.email}} </h1>
         <h1>user id:{{user.user_ID}}</h1>
+        <span id="response">here will be response</span>
         <div id="buttons" >
             <span>chat buttons:</span>
 
@@ -28,15 +29,20 @@
             "/close_session/"
         ]
         const chatApiEndpoint = "http://127.0.0.1:8000/chat"
+        const response = document.querySelector("#response")
         let i = 0
         chatApiUrls.map(url => {
-            let panelButton = document.createElement("button")
+            const panelButton = document.createElement("button")
+            
             panelButton.id = i
             panelButton.innerHTML = url
             panelButton.addEventListener("click", () => {
                 fetch(chatApiEndpoint+url)
                 .then(res => res.json())
-                .then(data => console.log(data))
+                .then(data => {
+                    console.log(data)
+                    response.innerHTML = data.message
+                })
                 .catch(err => console.log(err))
             }) 
             root.appendChild(panelButton)

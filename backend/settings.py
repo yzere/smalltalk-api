@@ -62,9 +62,13 @@ CORS_ALLOWED_ORIGINS = [
     'https://localhost:3000',
     'http://localhost:3001',
     'http://127.0.0.1:3001',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
 ]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = ["127.0.0.1:3000", "localhost:3000", "127.0.0.1:3001", "localhost:3001"]
+CSRF_TRUSTED_ORIGINS = ["127.0.0.1:3000", "localhost:3000", 
+"127.0.0.1:3001", "localhost:3001"
+"127.0.0.1:5500", "localhost:5500"]
 # SESSION_COOKIE_SAMESITE = 'None' #do zmiany przy produkcji, gdyż będzie ta sama domena
 # CSRF_COOKIE_SAMESITE = 'None'
 # PAMIĘTAJ, ŻE SERWER MUSI BYĆ W TEJ SAMEJ DOMENIE A JEST RÓŻNICA MIĘDZY LOCALHOSTEM A 127...
