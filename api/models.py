@@ -1,4 +1,5 @@
 from email import contentmanager
+from turtle import circle
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 # from django.contrib.auth import User
@@ -6,6 +7,7 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     user_ID = models.AutoField(primary_key=True)
+    user_circles_IDs        = models.ManyToManyField('Circle', blank=True)
 
     def __str__(self):
         return str(self.user_ID)
@@ -20,7 +22,6 @@ class Profile(models.Model):
     social_link             = models.JSONField(null=True, blank=True)
     name                    = models.CharField(max_length=50, blank=True, null=True)
     contact                 = models.CharField(max_length=50, blank=True, null=True)
-    user_circles_IDs        = models.ManyToManyField('Circle', blank=True,)         # to chyba nawet też nie potrzebne
 
     def __str__(self):
         return str(self.profile_ID)
@@ -81,6 +82,7 @@ class WaitingRoom(models.Model):
     room_ID                     = models.AutoField(primary_key=True)
     user_that_want_to_join_ID   = models.OneToOneField('CustomUser', on_delete=models.DO_NOTHING)
     active_sessions_IDs         = models.ForeignKey('ActiveSession', blank=True, null=True, on_delete=models.SET_NULL)
+    circle                      = models.ForeignKey('Circle', on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.room_ID)

@@ -1,4 +1,4 @@
-
+from django.forms.models import model_to_dict
 from tabnanny import check
 from django.shortcuts import render, get_object_or_404
 from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
@@ -121,19 +121,27 @@ def leave_session(request):
             'message': message
         })
 
-@gather_response
+#@gather_response
 def join_waitingroom(request):
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
+    try:
+        circles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
+    except Circle.DoesNotExist:
+        return JsonResponse({
+            'message': f'User {user_id} has not got any circles.'
+        })
 
+    circle = choice(circles)
+    circle = Circle.objects.get(pk=circle)
     if WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):
         message = f'User {user_id} is already in waiting room.'
     else:
-        new_waiting_room = WaitingRoom(user_that_want_to_join_ID = user)
-        new_waiting_room.save();
+        new_waiting_room = WaitingRoom(user_that_want_to_join_ID = user, circle=circle)
+        new_waiting_room.save()
         # waiting_room.save()
         message = f'User {user_id} has been added to the waiting room.'
-    
+
     return JsonResponse({   
             'message': message
         })
@@ -164,18 +172,18 @@ def join_session(request):
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
     message = 'placeholder'
-    # Do testowania (najpierw trzeba dodać circle)
-    usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
-    usersCircles = choice(usersCircles)
-    usersCircle = Circle.objects.get(pk=usersCircles)
     # Check WaitingRoom
     try:
         waitingroom = WaitingRoom.objects.get(user_that_want_to_join_ID = user)
+        waitingroom_ID = model_to_dict(waitingroom, fields='circle')
     except WaitingRoom.DoesNotExist:
         #join_waitingroom(request)               # Jeżeli chcemy mieć automatyczne dodawanie do WaitingRoom
         message = f'Prior to being added to the session you need to join the waitingroom.'              # Jeżeli chcemy po prostu walnąć errora
         waitingroom = False
     # Chyba może się przydać ^
+    # Do testowania (najpierw trzeba dodać circle)
+    
+    usersCircle = Circle.objects.get(pk=waitingroom_ID['circle'])
 
     if not ActiveSession.objects.exists() and waitingroom:
         new_session = ActiveSession(member1_ID = find_user_waitingroom_object(request), circle = usersCircle)         
@@ -193,7 +201,7 @@ def join_session(request):
     else: 
         free_sessions = find_free_sessions_circle_match(request)                                                                         
         if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
-            print('z waiti')
+            #print('z waiti')
             message = f'Prior to being added to the session you need to join the waitingroom.'
         
         elif not free_sessions and waitingroom:
@@ -485,11 +493,20 @@ def add_all_waitingroom_to_sessions(request):                                   
             
             ses.save()
   
-                
-
     message = 'Everything done.'
     return JsonResponse({'message': message})
+'''         Jeszcze potrzebuję czasu
+def add_all_waitingroom_to_sessions_circle(request):
+    message = ''
+    if not WaitingRoom.objects.exists():
+        message = f'Aborting operation, there are no waiting users!'
 
+    circlesWaiting = WaitingRoom.objects.all().values_list('circle', flat=True)
+    print(circlesWaiting)
+    #waitingrooms = WaitingRoom.objects.filter(active_sessions_IDs = None)
+    message = 'Everything done.'
+    return JsonResponse({'message': message})
+'''
 def get_room_id(request):
     user_id = request.user.user_ID
     user = get_object_or_404(CustomUser, pk=user_id)
@@ -556,6 +573,7 @@ def join_circle(request, **kwargs):
         return JsonResponse({   
             'message': message
         })
+    user.user_circles_IDs.add(circle)
     circle.users_IDs.add(user)
     message = f'User {user_id} has been added to the circle {desired_circle_id}.'
     
@@ -581,6 +599,7 @@ def leave_circle(request, **kwargs):            # do testów server nie działą
         return JsonResponse({   
             'message': message
         })
+    user.user_circles_IDs.remove(circle)
     circle.users_IDs.remove(user)
     message = f'User {user_id} has been removed from the circle {desired_circle_id}.'
     
