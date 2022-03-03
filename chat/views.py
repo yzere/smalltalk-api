@@ -7,6 +7,7 @@ import copy
 import math
 import json
 from django.http import JsonResponse
+from django.db.models import Q
 from chat.views_methods import (    find_free_sessions,
                                     find_user_session,
                                     find_user_waitingroom_object,
@@ -495,18 +496,72 @@ def add_all_waitingroom_to_sessions(request):                                   
   
     message = 'Everything done.'
     return JsonResponse({'message': message})
-'''         Jeszcze potrzebuję czasu
+
 def add_all_waitingroom_to_sessions_circle(request):
     message = ''
     if not WaitingRoom.objects.exists():
         message = f'Aborting operation, there are no waiting users!'
 
     circlesWaiting = WaitingRoom.objects.all().values_list('circle', flat=True)
-    print(circlesWaiting)
-    #waitingrooms = WaitingRoom.objects.filter(active_sessions_IDs = None)
+    circlesWaiting = list(dict.fromkeys(circlesWaiting))
+    #print(circlesWaiting)
+    # Mam listę z jakich circle oczekują użytkownicy
+    # Trzeba dodać użytkowników do sesji zgodnie z circle
+    for circleWaiting in circlesWaiting:
+        circle = Circle.objects.get(pk=circleWaiting)
+        waitingrooms = WaitingRoom.objects.filter(active_sessions_IDs = None, circle=circle)
+        users_to_match = waitingrooms.count()
+        if ActiveSession.objects.exists():
+            sessions = ActiveSession.objects.filter(Q(member2_ID__isnull=True) | Q(member1_ID__isnull=True), circle=circle).values_list('pk', flat=True)
+            #if not sessions:
+             #   return JsonResponse({'message': 'No free sessions'})
+            free_seats = 0
+            for ses in sessions:
+                session_object = ActiveSession.objects.get(session_ID = ses)
+                if session_object.member1_ID == None:
+                    free_seats += 1
+                if session_object.member2_ID == None:
+                    free_seats += 1
+            if users_to_match > free_seats:
+                lacking_seats =  users_to_match - free_seats
+                lacking_sessions = math.ceil(lacking_seats/2)
+                print(f'Preparing {lacking_sessions} sessions...')  # Dalej nie sprawdzałem, ale chyba powinno działać
+            else:
+                lacking_sessions = 0
+            message = f'There are {free_seats} free seats'
+        else:  
+            lacking_sessions = math.ceil(waitingrooms.count()/2)
+            print(f'Preparing {lacking_sessions} sessions...')
+        for i in range(lacking_sessions):
+            ses = ActiveSession(circle=circle)
+            print(f'Preparing {lacking_sessions} sessions...')
+            message += f'Created session of id {ses.session_ID}'
+            ses.save()
+        free_sessions = sessions = ActiveSession.objects.filter(Q(member2_ID__isnull=True) | Q(member1_ID__isnull=True), circle=circle).values_list('pk', flat=True)
+        
+        if free_sessions:
+            sessions = ActiveSession.objects.filter(pk__in=free_sessions)
+            stop_flag = False           # A od tąd to już w ogóle nie ogarniam co się dzieje
+            pointer = 0
+            members = {0: 'member1_ID', 1: 'member2_ID'}
+            for j in range(len(sessions)):
+                ses = sessions[j]
+                for k in range(2):
+                    if getattr(ses, members[k]) == None:
+                        if pointer > len(waitingrooms)-1:
+                            break
+                        waitingroom = waitingrooms[pointer]
+                        setattr(ses, members[k], waitingroom)
+                        waitingroom.active_sessions_IDs = ses
+                        waitingroom.save()
+                        pointer += 1 
+                        if pointer > len(waitingrooms)-1:
+                            stop_flag = True
+                            break
+                ses.save()
     message = 'Everything done.'
     return JsonResponse({'message': message})
-'''
+
 def get_room_id(request):
     user_id = request.user.user_ID
     user = get_object_or_404(CustomUser, pk=user_id)

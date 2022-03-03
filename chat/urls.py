@@ -22,7 +22,7 @@ urlpatterns = [
     path('remove_user_from_session/<str:desired_session_id>/<str:desired_user_id>/', remove_user_from_session, name='remove_user_from_session'),
     path('add_user_to_session/<str:desired_session_id>/<str:desired_user_id>/', add_user_to_session, name='add_user_to_session'),
     path('add_all_waitingroom_to_sessions/', add_all_waitingroom_to_sessions, name='add_all_waitingroom_to_sessions'),
-    #path('add_all_waitingroom_to_sessions_circle/', add_all_waitingroom_to_sessions_circle, name='add_all_waitingroom_to_sessions_circle'),
+    path('add_all_waitingroom_to_sessions_circle/', add_all_waitingroom_to_sessions_circle, name='add_all_waitingroom_to_sessions_circle'),
     
     path('get_room_id/', get_room_id, name='get_room_id'),
     path('get_room_messages/', get_room_messages, name='get_room_messages'),
