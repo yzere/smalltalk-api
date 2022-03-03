@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
+from api.models import ActiveSession, Message, WaitingRoom, CustomUser, Circle
 from random import choice
 from django.db.models import Q
 

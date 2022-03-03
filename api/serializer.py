@@ -3,7 +3,6 @@ from .models import (
     Report, 
     Message, 
     CustomUser,
-    Profile,
     WaitingRoom,
     ActiveSession
     )
@@ -32,11 +31,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('email', 'last_login', 'date_joined', 'is_staff')
-
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = '__all__'
 
 class WaitingRoomSerializer(serializers.ModelSerializer):
     class Meta:

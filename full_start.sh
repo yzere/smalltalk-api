@@ -4,6 +4,7 @@
 #   alias full_api_start="source $HOME/Projects/smalltalk-api/full_start.sh"
 
 #!/usr/bin/bash
+#sudo apt-get install python3-tk    # Jak wyskoczy błąd przy makemigrations
 source ~/Projects/smalltalk-api/venv/bin/activate
 python ~/Projects/smalltalk-api/manage.py makemigrations
 python ~/Projects/smalltalk-api/manage.py migrate

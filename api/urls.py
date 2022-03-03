@@ -5,7 +5,6 @@ from .views import (
     ReportViewSet, 
     MessageViewSet, 
     CustomUserViewSet,
-    ProfileViewSet,
     WaitingRoomViewSet,
     ActiveSessionViewSet
     )
@@ -15,7 +14,6 @@ router.register(r'circles', CircleViewSet),
 router.register(r'reports', ReportViewSet),
 router.register(r'messages', MessageViewSet),
 router.register(r'users', CustomUserViewSet),
-router.register(r'profile', ProfileViewSet),
 router.register(r'WaitingRoom', WaitingRoomViewSet),
 router.register(r'ActiveSession', ActiveSessionViewSet)
 

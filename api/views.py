@@ -7,7 +7,6 @@ from .serializer import (
     ReportSerializer, 
     MessageSerializer,
     CustomUserSerializer,
-    ProfileSerializer,
     WaitingRoomSerializer,
     ActiveSessionSerializer
     )
@@ -17,7 +16,6 @@ from .models import (
     Report,
     Message, 
     CustomUser,
-    Profile,
     WaitingRoom,
     ActiveSession
     )
@@ -37,10 +35,6 @@ class MessageViewSet(viewsets.ModelViewSet):
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-
-class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
 
 class WaitingRoomViewSet(viewsets.ModelViewSet):
     queryset = WaitingRoom.objects.all()

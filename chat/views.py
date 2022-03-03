@@ -1,7 +1,7 @@
 from django.forms.models import model_to_dict
 from tabnanny import check
 from django.shortcuts import render, get_object_or_404
-from api.models import ActiveSession, Message, Profile, WaitingRoom, CustomUser, Circle
+from api.models import ActiveSession, Message, WaitingRoom, CustomUser, Circle
 from random import choice
 import copy
 import math

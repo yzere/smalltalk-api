@@ -9,7 +9,6 @@ from .forms import (
 
 from .models import (
     CustomUser,
-    Profile,
     Circle,
     Report,
     WaitingRoom,
@@ -24,11 +23,6 @@ class CustomUserAdmin(UserAdmin):
     list_display = ['email']
 
 admin.site.register(CustomUser, CustomUserAdmin)
-
-
-@admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['profile_ID']
 
 @admin.register(Circle)
 class CircleAdmin(admin.ModelAdmin):
