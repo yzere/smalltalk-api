@@ -23,6 +23,7 @@ urlpatterns = [
     path('add_user_to_session/<str:desired_session_id>/<str:desired_user_id>/', add_user_to_session, name='add_user_to_session'),
     path('add_all_waitingroom_to_sessions/', add_all_waitingroom_to_sessions, name='add_all_waitingroom_to_sessions'),
     path('add_all_waitingroom_to_sessions_circle/', add_all_waitingroom_to_sessions_circle, name='add_all_waitingroom_to_sessions_circle'),
+    path('refresh_expire_date/<str:desired_circle_id>/<str:desired_expire_date>/', refresh_expire_date, name='refresh_expire_date'),
     
     path('get_room_id/', get_room_id, name='get_room_id'),
     path('get_room_messages/', get_room_messages, name='get_room_messages'),

@@ -1,9 +1,11 @@
 from django.forms.models import model_to_dict
 from django.utils import timezone
+import datetime
 from tabnanny import check
 from django.shortcuts import render, get_object_or_404
 from api.models import ActiveSession, Message, WaitingRoom, CustomUser, Circle
-from random import choice
+from random import choice, choices
+import string
 import copy
 import math
 import json
@@ -620,10 +622,10 @@ def close_session(request): #czyści sesję z wiadomości i przygotowuje do nast
 
 #@gather_response           Nie do końca wiem czy musi być ten dekorator
 def join_circle(request, **kwargs):
-    #/chat/join_circle/<circle_id>
+    #/chat/join_circle/<circle_code>
     message = ''
     if kwargs['desired_circle']:
-        desired_circle = kwargs['desired_circle']                # do późniejszej zmiany na jakiś kod
+        desired_circle = kwargs['desired_circle']
     else:
         return JsonResponse({'error' : 'Bad URL!'})
     user_id = request.user.user_ID
@@ -654,16 +656,15 @@ def join_circle(request, **kwargs):
             'message': message
         })
 
-def leave_circle(request, **kwargs):            # do testów server nie działą
+def leave_circle(request, **kwargs):
     #/chat/join_circle/<circle_id>
     message = ''
     if kwargs['desired_circle_id']:
-        desired_circle_id = kwargs['desired_circle_id']                # do późniejszej zmiany na jakiś kod
+        desired_circle_id = kwargs['desired_circle_id']
     else:
         return JsonResponse({'error' : 'Bad URL!'})
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
-    #coś co przetworzy nam późniejszy kod na circle_id
     # jakieś zabezpieczenia
     try:
         circle = Circle.objects.get(pk = desired_circle_id)
@@ -680,6 +681,38 @@ def leave_circle(request, **kwargs):            # do testów server nie działą
             'message': message
         })
 
+def refresh_expire_date(request, **kwargs):
+    # chat/refresh_expire_date/<circle_id>/<new_expire_date>
+    # expire date in format "YYYY-MM-DD-HH-MM-SS"
+    # circle id bez problemu mogę zamienić na dotychczasowy circle code
+    if kwargs['desired_circle_id']:
+        desired_circle_id = kwargs['desired_circle_id']
+    else:
+        return JsonResponse({'error' : 'Bad URL! You have to specify desired circle.'})
+
+    if kwargs['desired_expire_date']:
+        desired_expire_date = kwargs['desired_expire_date']
+    else:
+        return JsonResponse({'error' : 'Bad URL! You have to specify valid expire date.'})
+    
+    try:
+        circle = Circle.objects.get(pk=desired_circle_id)
+    except Circle.DoesNotExist:
+        return JsonResponse({'error' : f'Bad URL! Circle {desired_circle_id} not found'})
+    
+    newDate = desired_expire_date.split("-")
+    dateToSave = datetime.datetime(int(newDate[0]), int(newDate[1]), int(newDate[2]), int(newDate[3]), int(newDate[4]), int(newDate[5]))
+    circle.expire_date = dateToSave
+    while True:
+        code = ''.join(choices(string.ascii_uppercase + string.digits, k=8))
+        if Circle.objects.filter(code=code).count() == 0:
+            break
+    circle.code = code
+    circle.save()
+    
+    return JsonResponse({'message' : f'Expire date in circle {desired_circle_id} changed to {desired_expire_date}. New circle code: {code}'})
+    
+
 #Paczki
 def instant_match(request):
     join_waitingroom(request)
@@ -694,46 +727,7 @@ def instant_abort(request):
 
 
 def index(request):
-    user_id = request.user.user_ID
-    user = CustomUser.objects.get(pk=user_id)
-    #userProfile = Profile.objects.get(pk=user)
-    usersCircles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
-    usersCircles = choice(usersCircles)
-    usersCircles = Circle.objects.get(pk=usersCircles)
-    isWaiting = 0
-    try:
-        isWaiting = WaitingRoom.objects.get(user_that_want_to_join_ID=user)
-    except WaitingRoom.DoesNotExist:
-        pass
-    #Trzeba przetestować czy to ma jakiś sens
-    if not isWaiting:
-        addWaiting = WaitingRoom(user_that_want_to_join_ID=user)
-        addWaiting.save()
-        isWaiting = WaitingRoom.objects.get(user_that_want_to_join_ID=user)
-    circlesID = Circle.objects.filter(users_IDs=user)
-    freeSessions = ActiveSession.objects.filter(member2_ID__isnull=True).filter(circle=usersCircles).values_list('pk', flat=True)
-    print(freeSessions)
-
-    if freeSessions and not ActiveSession.objects.filter(member1_ID=user_id) and not ActiveSession.objects.filter(member2_ID=user_id):
-        randomSessionPk = choice(freeSessions)
-        randomSessionObj = ActiveSession.objects.get(pk=randomSessionPk)
-        randomSessionObj.member2_ID = WaitingRoom.objects.get(user_that_want_to_join_ID=user)
-        randomSessionObj.save()
-    elif not ActiveSession.objects.filter(member1_ID=user_id) and not ActiveSession.objects.filter(member2_ID=user_id):
-        newSession = ActiveSession(member1_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user), circle=usersCircles)
-        newSession.save()
-
-    if ActiveSession.objects.filter(member1_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user)):
-        r_id = ActiveSession.objects.filter(member1_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user)).values_list('pk', flat=True)
-    elif ActiveSession.objects.filter(member2_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user)):
-        r_id = ActiveSession.objects.filter(member2_ID=WaitingRoom.objects.get(user_that_want_to_join_ID=user)).values_list('pk', flat=True)
-    r_id = r_id[0]
-    waiting_id = WaitingRoom.objects.get(user_that_want_to_join_ID=user_id)
-
-    return render(request, 'index.html', {
-        'room_id': r_id,
-        'waiting_id': waiting_id
-    })
+    return render(request, 'index.html', {})
 
 def room(request, room_name):
     room = ActiveSession.objects.filter(session_ID=room_name).first()

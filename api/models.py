@@ -3,14 +3,14 @@ from turtle import circle
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import string
-import random
+from random import choices
 # from django.contrib.auth import User
 
 def unique_circle_code():
     length = 8
 
     while True:
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+        code = ''.join(choices(string.ascii_uppercase + string.digits, k=length))
         if Circle.objects.filter(code=code).count() == 0:
             break
     return code
