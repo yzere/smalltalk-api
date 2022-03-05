@@ -1,4 +1,5 @@
 from django.forms.models import model_to_dict
+from django.utils import timezone
 from tabnanny import check
 from django.shortcuts import render, get_object_or_404
 from api.models import ActiveSession, Message, WaitingRoom, CustomUser, Circle
@@ -126,15 +127,26 @@ def leave_session(request):
 def join_waitingroom(request):
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
+    now = timezone.now()
     try:
         circles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
     except Circle.DoesNotExist:
         return JsonResponse({
             'message': f'User {user_id} has not got any circles.'
         })
+    newCircles = []
+    for cir in circles:
+        CirObject = Circle.objects.get(pk = cir)
+        if CirObject.expire_date > now:
+            newCircles.append(CirObject.pk)
+    if newCircles:
+        circle = choice(newCircles)
+        circle = Circle.objects.get(pk=circle)
+    else:
+        return JsonResponse({   
+            'message': f'User {user_id} has no non-expired circles.'
+        })
 
-    circle = choice(circles)
-    circle = Circle.objects.get(pk=circle)
     if WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):
         message = f'User {user_id} is already in waiting room.'
     else:
@@ -619,8 +631,8 @@ def join_circle(request, **kwargs):
         return JsonResponse({'error' : 'Bad URL!'})
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
+    now = timezone.now()
     #coś co przetworzy nam późniejszy kod na circle_id
-    # jakieś zabezpieczenia
     try:
         circle = Circle.objects.get(pk = desired_circle_id)
     except Circle.DoesNotExist:
@@ -628,9 +640,19 @@ def join_circle(request, **kwargs):
         return JsonResponse({   
             'message': message
         })
-    user.user_circles_IDs.add(circle)
-    circle.users_IDs.add(user)
-    message = f'User {user_id} has been added to the circle {desired_circle_id}.'
+    maxU = circle.users_IDs.all()
+    
+    if circle.expire_date < now:
+        return JsonResponse({   
+            'message': f'Circle {desired_circle_id} is expired.'
+        })
+    
+    if circle.max_users > len(maxU):
+        user.user_circles_IDs.add(circle)
+        circle.users_IDs.add(user)
+        message = f'User {user_id} has been added to the circle {desired_circle_id}.'
+    else:
+        message = f'Circle {desired_circle_id} has no free sits.'
     
     return JsonResponse({   
             'message': message
