@@ -516,9 +516,6 @@ def add_all_waitingroom_to_sessions_circle(request):
 
     circlesWaiting = WaitingRoom.objects.all().values_list('circle', flat=True)
     circlesWaiting = list(dict.fromkeys(circlesWaiting))
-    #print(circlesWaiting)
-    # Mam listę z jakich circle oczekują użytkownicy
-    # Trzeba dodać użytkowników do sesji zgodnie z circle
     for circleWaiting in circlesWaiting:
         circle = Circle.objects.get(pk=circleWaiting)
         waitingrooms = WaitingRoom.objects.filter(active_sessions_IDs = None, circle=circle)
@@ -553,7 +550,7 @@ def add_all_waitingroom_to_sessions_circle(request):
         
         if free_sessions:
             sessions = ActiveSession.objects.filter(pk__in=free_sessions)
-            stop_flag = False           # A od tąd to już w ogóle nie ogarniam co się dzieje
+            stop_flag = False
             pointer = 0
             members = {0: 'member1_ID', 1: 'member2_ID'}
             for j in range(len(sessions)):
@@ -625,34 +622,33 @@ def close_session(request): #czyści sesję z wiadomości i przygotowuje do nast
 def join_circle(request, **kwargs):
     #/chat/join_circle/<circle_id>
     message = ''
-    if kwargs['desired_circle_id']:
-        desired_circle_id = kwargs['desired_circle_id']                # do późniejszej zmiany na jakiś kod
+    if kwargs['desired_circle']:
+        desired_circle = kwargs['desired_circle']                # do późniejszej zmiany na jakiś kod
     else:
         return JsonResponse({'error' : 'Bad URL!'})
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
     now = timezone.now()
-    #coś co przetworzy nam późniejszy kod na circle_id
     try:
-        circle = Circle.objects.get(pk = desired_circle_id)
+        circle = Circle.objects.get(code = desired_circle)
     except Circle.DoesNotExist:
-        message = f'Circle {desired_circle_id} not found.'
+        message = f'Circle {desired_circle} not found.'
         return JsonResponse({   
             'message': message
         })
     maxU = circle.users_IDs.all()
-    
+
     if circle.expire_date < now:
         return JsonResponse({   
-            'message': f'Circle {desired_circle_id} is expired.'
+            'message': f'Circle {desired_circle} is expired.'
         })
     
     if circle.max_users > len(maxU):
         user.user_circles_IDs.add(circle)
         circle.users_IDs.add(user)
-        message = f'User {user_id} has been added to the circle {desired_circle_id}.'
+        message = f'User {user_id} has been added to the circle {desired_circle}.'
     else:
-        message = f'Circle {desired_circle_id} has no free sits.'
+        message = f'Circle {desired_circle} has no free sits.'
     
     return JsonResponse({   
             'message': message
