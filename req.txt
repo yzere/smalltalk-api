@@ -1,4 +1,4 @@
-﻿argon2-cffi==21.3.0
+argon2-cffi==21.3.0
 argon2-cffi-bindings==21.2.0
 asgiref==3.5.0
 attrs==21.4.0
@@ -22,6 +22,7 @@ hyperlink==21.0.0
 idna==3.3
 incremental==21.3.0
 oauthlib==3.2.0
+psycopg2-binary==2.9.3
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.21
@@ -37,6 +38,6 @@ sqlparse==0.4.2
 Twisted==22.1.0
 twisted-iocpsupport==1.0.2; platform_system == "Windows"
 txaio==21.2.1
-typing_extensions==4.0.1
+typing-extensions==4.0.1
 urllib3==1.26.8
 zope.interface==5.4.0
