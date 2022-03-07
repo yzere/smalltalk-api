@@ -32,5 +32,8 @@ urlpatterns = [
     path('join_circle/<str:desired_circle>/', join_circle, name='join_circle'),
     path('leave_circle/<str:desired_circle_id>/', leave_circle, name='leave_circle'),
     path('get_user_circles_ids/', get_user_circles_ids, name='get_user_circles_ids'),
+    
+    path('check_session/', check_session, name='check_session'),
+
     path('<str:room_name>/', room, name='room')
 ]

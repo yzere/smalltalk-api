@@ -4,6 +4,7 @@ import datetime
 from tabnanny import check
 from django.shortcuts import render, get_object_or_404
 from api.models import ActiveSession, Message, WaitingRoom, CustomUser, Circle
+from rest_framework.authtoken.models import Token
 from random import choice, choices
 import string
 import copy
@@ -729,6 +730,18 @@ def get_user_circles_ids(request):
 
     return JsonResponse({'message': ids})
     
+def check_session(request):
+    if request.session.session_key:
+        user_id = request.user.user_ID
+        user = CustomUser.objects.get(pk=user_id)
+
+        token = Token.objects.get(user_id = user_id)
+
+        # print(f'USER: {user.password}')
+        # print(request.session.session_key)
+        return JsonResponse({"message": token.key})
+    else:
+        return JsonResponse({"message": ''})
 
 #Paczki
 def instant_match(request):
