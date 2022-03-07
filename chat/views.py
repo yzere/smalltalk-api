@@ -634,7 +634,7 @@ def join_circle(request, **kwargs):
     try:
         circle = Circle.objects.get(code = desired_circle)
     except Circle.DoesNotExist:
-        message = f'Circle {desired_circle} not found.'
+        message = f'Circle with invitational code: {desired_circle} not found.'
         return JsonResponse({   
             'message': message
         })
@@ -644,13 +644,14 @@ def join_circle(request, **kwargs):
         return JsonResponse({   
             'message': f'Circle {desired_circle} is expired.'
         })
-    
-    if circle.max_users > len(maxU):
+    elif circle.users_IDs.filter(pk = user_id).exists():
+        message = f'User {user_id} is already in the circle {circle.circle_ID}.'
+    elif circle.max_users > len(maxU):
         user.user_circles_IDs.add(circle)
         circle.users_IDs.add(user)
-        message = f'User {user_id} has been added to the circle {desired_circle}.'
+        message = f'User {user_id} has been added to the circle {circle.circle_ID}.'
     else:
-        message = f'Circle {desired_circle} has no free sits.'
+        message = f'Circle {circle.circle_ID} has no free sits.'
     
     return JsonResponse({   
             'message': message
@@ -711,6 +712,22 @@ def refresh_expire_date(request, **kwargs):
     circle.save()
     
     return JsonResponse({'message' : f'Expire date in circle {desired_circle_id} changed to {desired_expire_date}. New circle code: {code}'})
+
+def get_user_circles_ids(request):
+    pass
+    user_id = request.user.user_ID
+    user = CustomUser.objects.get(pk=user_id)
+
+    try:
+        user_circles = Circle.objects.filter(users_IDs = user_id)
+    except BaseException:
+        return JsonResponse({'error' : f'User hasn\' joined any circles.'})
+    ids = []
+
+    for circle in user_circles:
+        ids.append(circle.circle_ID)
+
+    return JsonResponse({'message': ids})
     
 
 #Paczki
