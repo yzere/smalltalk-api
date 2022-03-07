@@ -742,7 +742,12 @@ def room(request, room_name):
     return render(request, 'chatroom.html', {
         'room_name': room_name
     })
-
+def panel(request):
+    return render(request, 'panel.html',
+    {
+        'user': request.user
+    })
+    
 def root(request):
 
     return render(request, 'base.html', {})
