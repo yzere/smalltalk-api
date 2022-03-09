@@ -17,7 +17,9 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt-get update
 sudo apt-get -y install postgresql
 sudo service postgresql start                                                       #polecenie dla WSL
+sudo update-rc.d service_name defaults                                              #polecenie dla WSL (autostart)
 sudo systemctl start postgresql                                                     #polecenie dla normalnego Ubuntu
+sudo systemctl enable postgresql                                                    #polecenie dla normalnego Ubuntu (autostart)
 
 Tworzenie bazy danych:
 sudo su - postgres
