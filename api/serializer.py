@@ -4,7 +4,8 @@ from .models import (
     Message, 
     CustomUser,
     WaitingRoom,
-    ActiveSession
+    ActiveSession,
+    Icebreaker
     )
     
 from rest_framework import serializers
@@ -48,3 +49,8 @@ class ActiveSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActiveSession
         fields = ['session_ID', 'member1_ID', 'member2_ID']
+
+class IcebreakerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Icebreaker
+        fields = '__all__'

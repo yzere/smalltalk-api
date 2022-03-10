@@ -8,7 +8,8 @@ from .serializer import (
     MessageSerializer,
     CustomUserSerializer,
     WaitingRoomSerializer,
-    ActiveSessionSerializer
+    ActiveSessionSerializer,
+    IcebreakerSerializer
     )
 
 from .models import (
@@ -17,7 +18,8 @@ from .models import (
     Message, 
     CustomUser,
     WaitingRoom,
-    ActiveSession
+    ActiveSession,
+    Icebreaker
     )
 
 class CircleViewSet(viewsets.ModelViewSet):
@@ -43,3 +45,7 @@ class WaitingRoomViewSet(viewsets.ModelViewSet):
 class ActiveSessionViewSet(viewsets.ModelViewSet):
     queryset = ActiveSession.objects.all()
     serializer_class = ActiveSessionSerializer
+
+class IcebreakerViewSet(viewsets.ModelViewSet):
+    queryset = Icebreaker.objects.all()
+    serializer_class = IcebreakerSerializer

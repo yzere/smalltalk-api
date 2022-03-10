@@ -126,3 +126,16 @@ class Message(models.Model):
 
     def __str__(self):
         return str(self.message_ID)
+
+
+
+
+
+
+class Icebreaker(models.Model):
+    icebreaker_ID            = models.AutoField(primary_key=True)
+    content                  = models.CharField(max_length=255)
+
+    def __str__(self):
+        return str(self.icebreaker_ID)
+

@@ -6,7 +6,8 @@ from .views import (
     MessageViewSet, 
     CustomUserViewSet,
     WaitingRoomViewSet,
-    ActiveSessionViewSet
+    ActiveSessionViewSet,
+    IcebreakerViewSet
     )
 
 router = routers.DefaultRouter()
@@ -15,7 +16,8 @@ router.register(r'reports', ReportViewSet),
 router.register(r'messages', MessageViewSet),
 router.register(r'users', CustomUserViewSet),
 router.register(r'WaitingRoom', WaitingRoomViewSet),
-router.register(r'ActiveSession', ActiveSessionViewSet)
+router.register(r'ActiveSession', ActiveSessionViewSet),
+router.register(r'Icebreaker', IcebreakerViewSet)
 
 urlpatterns = [
     path('models/', include(router.urls)),

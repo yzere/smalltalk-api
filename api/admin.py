@@ -13,7 +13,8 @@ from .models import (
     Report,
     WaitingRoom,
     ActiveSession,
-    Message
+    Message,
+    Icebreaker
     )
 
 class CustomUserAdmin(UserAdmin):    
@@ -43,6 +44,11 @@ class ActiveSessionAdmin(admin.ModelAdmin):
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ['message_ID']
+
+@admin.register(Icebreaker)
+class IcebreakerAdmin(admin.ModelAdmin):
+    list_display = ['icebreaker_ID']
+
 
 
 
