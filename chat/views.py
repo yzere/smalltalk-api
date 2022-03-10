@@ -11,6 +11,7 @@ import math
 import json
 from django.http import JsonResponse
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
 from chat.views_methods import (    find_free_sessions,
                                     find_user_session,
                                     find_user_waitingroom_object,
@@ -95,6 +96,7 @@ def send_response(res):
 def find_session(request):
     return JsonResponse({'session_id': 1})
 
+@login_required                                                                                         # login_required też pododaję
 @gather_response
 def leave_session(request):
     user_id = request.user.user_ID
@@ -125,6 +127,7 @@ def leave_session(request):
             'message': message
         })
 
+@login_required                                                                                         # login_required też pododaję
 #@gather_response
 def join_waitingroom(request):
     user_id = request.user.user_ID
@@ -161,6 +164,7 @@ def join_waitingroom(request):
             'message': message
         })
 
+@login_required                                                                                         # login_required też pododaję
 @gather_response
 def leave_waitingroom(request):
 
@@ -180,6 +184,7 @@ def leave_waitingroom(request):
 
         })
 
+@login_required                                                                     # Już zapomniałem o istnieniu tej funkcji
 @gather_response
 def join_session(request):
 
@@ -262,7 +267,7 @@ def join_session(request):
             'message': message
         })
 
-
+@check_if_staff                                                         # Żeby ktoś się nie dodał przypadkiem do nie losowej sesji
 @gather_response
 def add_user_to_session(request, **kwargs):
     #/chat/add_user_to_session/<session_id>/    <user_id>
@@ -363,6 +368,7 @@ def add_user_to_session(request, **kwargs):
 
     return JsonResponse({'message' : message})
 
+@check_if_staff                                                                                 # To chyba też zadanie dla nas
 @gather_response
 def remove_user_from_session(request, **kwargs):
     #/chat/remove_user_from_session/<session_id>/<user_id>
@@ -418,32 +424,18 @@ def remove_user_from_session(request, **kwargs):
     for member in members:
         try:
             waiting_room = WaitingRoom.objects.get(room_ID = member.room_ID)
-            waiting_room.delete();
+            waiting_room.delete()
         except BaseException as err:
             print(err)
 
-
-        # waiting_room.save()
-        # print(f'member {member}')
-        # print(f'member_user {member_user}')
-        
-    #     if WaitingRoom.objects.filter(user_that_want_to_join_ID = member_user):
-    #         waiting_room = WaitingRoom.objects.get(user_that_want_to_join_ID = member_user)
-    #         waiting_room.delete()
-    #         # waiting_room.save()
-    #         message += f'User {member} has left the waiting room.'
-    #     else:
-    #         message += f'User {member} is not in waiting room.'
-    
-    # # print(ActiveSession.objects.filter(member2_ID=user.user_ID))
-    # print (message)
     return JsonResponse(
         {   
             'message': message
         })
 
+@check_if_staff                                                                                 # Raczej się przyda
 @gather_response
-def add_all_waitingroom_to_sessions(request):                                                               # nie wiem, czy nie trzeba będzie tego jakoś przepisać
+def add_all_waitingroom_to_sessions(request):
     message = ''
     if not WaitingRoom.objects.exists():
         message = f'Aborting operation, there are no waiting users!'
@@ -453,7 +445,6 @@ def add_all_waitingroom_to_sessions(request):                                   
         return JsonResponse({'message': 'No users waiting for match.'})
 
     users_to_match = waitingrooms.count()
-    # sessions = ActiveSession.objects.all()
     if ActiveSession.objects.exists():
         sessions = find_free_sessions()
         if not sessions:
@@ -511,6 +502,7 @@ def add_all_waitingroom_to_sessions(request):                                   
     message = 'Everything done.'
     return JsonResponse({'message': message})
 
+@check_if_staff                                                                         # Zdecydowanie się przyda
 def add_all_waitingroom_to_sessions_circle(request):
     message = ''
     if not WaitingRoom.objects.exists():
@@ -524,8 +516,6 @@ def add_all_waitingroom_to_sessions_circle(request):
         users_to_match = waitingrooms.count()
         if ActiveSession.objects.exists():
             sessions = ActiveSession.objects.filter(Q(member2_ID__isnull=True) | Q(member1_ID__isnull=True), circle=circle).values_list('pk', flat=True)
-            #if not sessions:
-             #   return JsonResponse({'message': 'No free sessions'})
             free_seats = 0
             for ses in sessions:
                 session_object = ActiveSession.objects.get(session_ID = ses)
@@ -536,7 +526,7 @@ def add_all_waitingroom_to_sessions_circle(request):
             if users_to_match > free_seats:
                 lacking_seats =  users_to_match - free_seats
                 lacking_sessions = math.ceil(lacking_seats/2)
-                print(f'Preparing {lacking_sessions} sessions...')  # Dalej nie sprawdzałem, ale chyba powinno działać
+                print(f'Preparing {lacking_sessions} sessions...')
             else:
                 lacking_sessions = 0
             message = f'There are {free_seats} free seats'
@@ -573,6 +563,7 @@ def add_all_waitingroom_to_sessions_circle(request):
     message = 'Everything done.'
     return JsonResponse({'message': message})
 
+@login_required                                                                                         # login_required też pododaję
 def get_room_id(request):
     user_id = request.user.user_ID
     user = get_object_or_404(CustomUser, pk=user_id)
@@ -586,6 +577,7 @@ def get_room_id(request):
         message = session.session_ID
     return JsonResponse({'message': message})
 
+@login_required                                                                                         # login_required też pododaję
 def get_room_messages(request):
     user_id = request.user.user_ID
     user = get_object_or_404(CustomUser, pk=user_id)
@@ -605,7 +597,7 @@ def get_room_messages(request):
     
     return JsonResponse({'content': msg_list})
 
-
+# Nie wiem czy tutaj dawać jakiś dekorator
 def close_session(request): #czyści sesję z wiadomości i przygotowuje do następnego matcha
     user_id = request.user.user_ID
     user = get_object_or_404(CustomUser, pk=user_id)
@@ -620,7 +612,8 @@ def close_session(request): #czyści sesję z wiadomości i przygotowuje do nast
     else:
         return JsonResponse({'message': 'No session to close.'})
 
-#@gather_response           Nie do końca wiem czy musi być ten dekorator
+
+@login_required                                                                                         # login_required też pododaję
 def join_circle(request, **kwargs):
     #/chat/join_circle/<circle_code>
     message = ''
@@ -656,6 +649,7 @@ def join_circle(request, **kwargs):
             'message': message
         })
 
+@login_required                                                                                         # login_required też pododaję
 def leave_circle(request, **kwargs):
     #/chat/join_circle/<circle_id>
     message = ''
@@ -665,7 +659,6 @@ def leave_circle(request, **kwargs):
         return JsonResponse({'error' : 'Bad URL!'})
     user_id = request.user.user_ID
     user = CustomUser.objects.get(pk=user_id)
-    # jakieś zabezpieczenia
     try:
         circle = Circle.objects.get(pk = desired_circle_id)
     except Circle.DoesNotExist:
@@ -681,6 +674,7 @@ def leave_circle(request, **kwargs):
             'message': message
         })
 
+@check_if_staff                                                                                 # Jak na razie chyba też nasza funkcja
 def refresh_expire_date(request, **kwargs):
     # chat/refresh_expire_date/<circle_id>/<new_expire_date>
     # expire date in format "YYYY-MM-DD-HH-MM-SS"
@@ -714,20 +708,18 @@ def refresh_expire_date(request, **kwargs):
     
 
 #Paczki
+@check_if_staff                                                             # chyba też
 def instant_match(request):
     join_waitingroom(request)
     join_session(request)
     return send_response()
 
-
+@login_required                                                                                         # A tutaj też dam
 def instant_abort(request):
     leave_session(request)
     leave_waitingroom(request)
     return send_response()
 
-
-def index(request):
-    return render(request, 'index.html', {})
 
 def room(request, room_name):
     room = ActiveSession.objects.filter(session_ID=room_name).first()
@@ -743,6 +735,7 @@ def room(request, room_name):
         'room_name': room_name
     })
 
+@check_if_staff                                                         # na wszelki wypadek
 def root(request):
 
     return render(request, 'base.html', {})
