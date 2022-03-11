@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Panel</title>
+</head>
+<body>
+    
+    <div id="root">
+        <h1>{{user.email}} </h1>
+        <h1>user id:{{user.user_ID}}</h1>
+        <span id="response">here will be response</span>
+        <div id="buttons" >
+            <span>chat buttons:</span>
+
+        </div>
+
+    </div>
+    <script>
+        const root = document.querySelector("#buttons")
+        const chatApiUrls = [
+            "/join_waitingroom/",
+            "/leave_waitingroom/",
+            "/join_session/",
+            "/leave_session/",
+            "/add_all_waitingroom_to_sessions/",
+            "/add_all_waitingroom_to_sessions_circle/",
+            "/close_session/",
+            "/refresh_expire_date/1/",
+            "/join_circle/6EW61D0R/",
+            "/leave_circle/1/"
+        ]
+        const chatApiEndpoint = "http://127.0.0.1:8000/chat"
+        const response = document.querySelector("#response")
+        let i = 0
+        chatApiUrls.map(url => {
+            const panelButton = document.createElement("button")
+            
+            panelButton.id = i
+            panelButton.innerHTML = url
+            panelButton.addEventListener("click", () => {
+                fetch(chatApiEndpoint+url)
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data)
+                    response.innerHTML = data.message
+                })
+                .catch(err => console.log(err))
+            }) 
+            root.appendChild(panelButton)
+            i++;
+        })
+    </script>
+</body>
+</html>

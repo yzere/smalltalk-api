@@ -5,6 +5,8 @@ from .views import *
 
 urlpatterns = [
 
+    path('index', index, name='index'),
+    path('panel/', panel, name='panel'),
     path('', root, name='root'),
 
     path('find_session/', find_session, name='find_session'),
@@ -27,7 +29,12 @@ urlpatterns = [
     path('get_room_id/', get_room_id, name='get_room_id'),
     path('get_room_messages/', get_room_messages, name='get_room_messages'),
     path('close_session/', close_session, name='close_session'),
+
     path('join_circle/<str:desired_circle>/', join_circle, name='join_circle'),
     path('leave_circle/<str:desired_circle_id>/', leave_circle, name='leave_circle'),
+    path('get_user_circles_ids/', get_user_circles_ids, name='get_user_circles_ids'),
+    
+    path('check_session/', check_session, name='check_session'),
+
     path('<str:room_name>/', room, name='room')
 ]

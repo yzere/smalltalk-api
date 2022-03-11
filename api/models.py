@@ -1,5 +1,5 @@
 from email import contentmanager
-from turtle import circle
+# from turtle import circle
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import string
@@ -13,6 +13,7 @@ def unique_circle_code():
         code = ''.join(choices(string.ascii_uppercase + string.digits, k=length))
         if Circle.objects.filter(code=code).count() == 0:
             break
+        print(code)
     return code
 
 
@@ -47,7 +48,7 @@ class Circle(models.Model):
     admin_users_IDs         = models.ManyToManyField('CustomUser', blank=True, related_name='admin_users_IDs')
     reports_IDs             = models.ManyToManyField('Report', blank=True)
     users_IDs               = models.ManyToManyField('CustomUser', blank=True, related_name='users_IDs')
-    code                    = models.CharField(max_length=10, default=unique_circle_code, unique=True)
+    code                    = models.CharField(max_length=10, default=unique_circle_code, null=True, unique=True)
 
     def __str__(self):
         return str(self.circle_ID)

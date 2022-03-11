@@ -1,5 +1,5 @@
 **/migrations/[0-9]*
-
+res.html
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
