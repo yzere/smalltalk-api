@@ -127,7 +127,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
                     self.room_group_name,
                     {
                         'type': 'chatroom_message',
-                        'message': f'#002 users reveal themselves. user1: {res[0].username} user2: {res[1].username}',
+                        'message': f'#002 u1:{res[0].username} s1:{res[0].social_link} u2:{res[1].username} s2:{res[1].social_link}',
                         'username': 'server',
                     }
                     )

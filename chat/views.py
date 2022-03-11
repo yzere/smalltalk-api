@@ -73,7 +73,8 @@ def check_if_staff(func):
             request = args[0]
         except BaseException as err:
             return JsonResponse({
-                'error': f'ERROR: {err}'
+                'error': f'ERROR: {err}',
+                'type': 'error'
             })
         
         user_id = request.user.user_ID
@@ -82,7 +83,8 @@ def check_if_staff(func):
             return func(*args, **kwargs)
         else:
             return JsonResponse({
-                'error': f'Too low permission level.'
+                'error': f'Too low permission level.',
+                'type': 'error'
             })
     return wrapper
 
@@ -107,6 +109,11 @@ def leave_session(request):
         session.save()
 
         message = f'User {user_id} has left session {session_id}.'
+        return JsonResponse(
+        {   
+            'message': message,
+            'type': 'success'
+        })
 
     elif ActiveSession.objects.filter(member1_ID=user.user_ID):
         session = ActiveSession.objects.get(member1_ID=user.user_ID)  
@@ -115,16 +122,27 @@ def leave_session(request):
         session.save()
 
         message = f'User {user_id} has left session {session_id}.'
+        return JsonResponse(
+        {   
+            'message': message,
+            'type': 'success'
+        })
 
     else:
         message = f'User {user_id} has no active sessions.'
+        return JsonResponse(
+        {   
+            'message': message,
+            'type': 'error'
+        })
     
     
     # print(ActiveSession.objects.filter(member2_ID=user.user_ID))
-    return JsonResponse(
-        {   
-            'message': message
-        })
+    # return JsonResponse(
+    #     {   
+    #         'message': message
+    #         'type':
+    #     })
 
 #@gather_response
 def join_waitingroom(request):
@@ -135,7 +153,8 @@ def join_waitingroom(request):
         circles = Circle.objects.filter(users_IDs=user).values_list('pk', flat=True)
     except Circle.DoesNotExist:
         return JsonResponse({
-            'message': f'User {user_id} has not got any circles.'
+            'message': f'User {user_id} has not got any circles.',
+            'type': 'error'
         })
     newCircles = []
     for cir in circles:
@@ -147,11 +166,16 @@ def join_waitingroom(request):
         circle = Circle.objects.get(pk=circle)
     else:
         return JsonResponse({   
-            'message': f'User {user_id} has no non-expired circles.'
+            'message': f'User {user_id} has no non-expired circles.',
+            'type': 'error'
         })
 
     if WaitingRoom.objects.filter(user_that_want_to_join_ID = user_id):
-        message = f'User {user_id} is already in waiting room.'
+        return JsonResponse({   
+            'message': f'User {user_id} is already in waiting room.',
+            'type': 'error'
+        })
+    
     else:
         new_waiting_room = WaitingRoom(user_that_want_to_join_ID = user, circle=circle)
         new_waiting_room.save()
@@ -159,7 +183,8 @@ def join_waitingroom(request):
         message = f'User {user_id} has been added to the waiting room.'
 
     return JsonResponse({   
-            'message': message
+            'message': message,
+            'type': 'success'
         })
 
 @gather_response
@@ -173,13 +198,18 @@ def leave_waitingroom(request):
         waiting_room.delete()
         # waiting_room.save()
         message = f'User {user_id} has left the waiting room.'
+        return JsonResponse({   
+            'message': message,
+            'type': 'success'
+        })
     else:
         message = f'User {user_id} is not in waiting room.'
-    
-    return JsonResponse({   
-            'message': message
-
+        return JsonResponse({   
+            'message': message,
+            'type': 'error'
         })
+    
+
 
 @gather_response
 def join_session(request):
@@ -196,6 +226,11 @@ def join_session(request):
         #join_waitingroom(request)               # Jeżeli chcemy mieć automatyczne dodawanie do WaitingRoom
         message = f'Prior to being added to the session you need to join the waitingroom.'              # Jeżeli chcemy po prostu walnąć errora
         waitingroom = False
+        return JsonResponse({   
+            'message': message,
+            'type': 'error'
+        })
+        
     # Chyba może się przydać ^
     # Do testowania (najpierw trzeba dodać circle)
     
@@ -211,15 +246,25 @@ def join_session(request):
         waitingroom.save()
 
         message = f'Created new session {session_id} and added user {user_id}.'
-        
+        return JsonResponse({   
+            'message': message,
+            'type': 'success'
+        })
     elif find_user_session(request)[1] != None and waitingroom:
         message = f'User {user_id} already in session of id {find_user_session(request)[0]}'
+        return JsonResponse({   
+            'message': message,
+            'type': 'info'
+        })
     else: 
         free_sessions = find_free_sessions_circle_match(request)                                                                         
         if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
             #print('z waiti')
             message = f'Prior to being added to the session you need to join the waitingroom.'
-        
+            return JsonResponse({   
+                'message': message,
+                'type': 'error'
+             })
         elif not free_sessions and waitingroom:
             #sprawdzanie warunku bycia w waitingroomie                                              Trzeba ogarnąć, czy nie sprawdzamy warunku 2x
             #try:
@@ -237,9 +282,16 @@ def join_session(request):
                 waitingroom.save()
 
                 message = f'Created new session {session_id} and added user {user_id}.'
+                return JsonResponse({   
+                    'message': message,
+                    'type': 'success'
+                })
             elif not waitingroom:
                 message = f'Prior to being added to the session you need to join the waitingroom.'
-        
+                return JsonResponse({   
+                    'message': message,
+                    'type': 'error'
+                })
         else:
             chosen_session = choose_session(free_sessions)
             print(free_sessions, chosen_session)
@@ -257,10 +309,14 @@ def join_session(request):
             
             
             message = f'Chosen session {session_id} and added user {user_id}.'
-
+            return JsonResponse({   
+                'message': message,
+                'type': 'success'
+            })
     # print(ActiveSession.objects.filter(member2_ID=user.user_ID))
     return JsonResponse({   
-            'message': message
+            'message': message,
+            'type': 'info'
         })
 
 
@@ -280,6 +336,7 @@ def add_user_to_session(request, **kwargs):
         if (ActiveSession.objects.filter(member1_ID = user_id).exists() or 
         ActiveSession.objects.filter(member2_ID = user_id).exists()):
             message = f'User {user_id} already in session.'
+            type = 'error'
 
         else:
             m1 = ActiveSession.objects.filter(member1_ID = None)
@@ -296,16 +353,19 @@ def add_user_to_session(request, **kwargs):
                     waitingroom.save()
 
                     message = f'Created new session {session_id} and added user {user_id}.'
+                    type='success'
                 else:
                     session = m2.last()
                     session_id = session.session_ID
                     session.member2_ID = find_user_waitingroom_object_by_ID(user_id)
                     message = f'Found {session_id} and added user {user_id}.'
+                    type='success'
             else:
                 session = m1.last()
                 session_id = session.session_ID
                 session.member1_ID = find_user_waitingroom_object_by_ID(user_id)
                 message = f'Found {session_id} and added user {user_id}.'
+                type='success'
             session.save()
 
     else:
@@ -328,7 +388,7 @@ def add_user_to_session(request, **kwargs):
             if find_user_waitingroom_object(request) == None and WAITINGROOM_NEEDED:
                 print('z waiti')
                 message = f'Prior to being added to the session you need to join the waitingroom.'
-
+                type='error'
             #jeżeli dana sesja nie jest wolna
             elif not free_session:
                 #sprawdź, czy jest zajęta, czy jeszcze nie stworzona 
@@ -342,8 +402,10 @@ def add_user_to_session(request, **kwargs):
                     waitingroom.save()
 
                     message = f'Created new session {session_id} and added user {user_id}.'
+                    type='success'
                 else:
                     message = f'Desired session {session_id} is full!.'
+                    type='error'
 
             #jeżeli sesja jest wolna (czyli ma co najmniej jedno wolne miejsce), dodaj tam użytkownika
             else:
@@ -361,8 +423,8 @@ def add_user_to_session(request, **kwargs):
                 waitingroom.save()
 
                 message = f'Added user {user_id} to session {session_id}'
-
-    return JsonResponse({'message' : message})
+                type='success'
+    return JsonResponse({'message' : message, 'type' : type})
 
 @gather_response
 def remove_user_from_session(request, **kwargs):
@@ -394,6 +456,7 @@ def remove_user_from_session(request, **kwargs):
         session_id = session.session_ID
         session.save()
         message = f'Users {members} have been removed from session {session_id}.'
+        type = 'success'
     else:
         if ActiveSession.objects.filter(member2_ID=desired_user_id):
             session = ActiveSession.objects.get(member2_ID=desired_user_id)
@@ -403,7 +466,7 @@ def remove_user_from_session(request, **kwargs):
             session.save()
 
             message = f'User {members} has been removed from session {session_id}.'
-
+            type = 'success'
         elif ActiveSession.objects.filter(member1_ID=desired_user_id):
             session = ActiveSession.objects.get(member1_ID=desired_user_id)  
             members = [session.member1_ID]
@@ -412,10 +475,11 @@ def remove_user_from_session(request, **kwargs):
             session.save()
 
             message = f'User {members} has been removed from session {session_id}.'
-
+            type = 'success'
         else:
             message = f'User {desired_user_id} has no active sessions.'
-        
+            type = 'info'
+
     for member in members:
         try:
             waiting_room = WaitingRoom.objects.get(room_ID = member.room_ID)
@@ -438,16 +502,15 @@ def remove_user_from_session(request, **kwargs):
     
     # # print(ActiveSession.objects.filter(member2_ID=user.user_ID))
     # print (message)
-    return JsonResponse(
-        {   
-            'message': message
-        })
+    return JsonResponse({'message' : message, 'type' : type})
 
 @gather_response
 def add_all_waitingroom_to_sessions(request):                                                               # nie wiem, czy nie trzeba będzie tego jakoś przepisać
     message = ''
+    type = 'info'
     if not WaitingRoom.objects.exists():
         message = f'Aborting operation, there are no waiting users!'
+        type = 'error'
     waitingrooms = WaitingRoom.objects.filter(active_sessions_IDs = None)
     print(f'waitingrooms: {waitingrooms}')
     if not waitingrooms:
@@ -475,6 +538,7 @@ def add_all_waitingroom_to_sessions(request):                                   
         else:
             lacking_sessions = 0
         message = f'There are {free_seats} free seats'
+        type = 'info'
     else:  
         lacking_sessions = math.ceil(waitingrooms.count()/2)
         print(f'Preparing {lacking_sessions} sessions...')
@@ -510,13 +574,14 @@ def add_all_waitingroom_to_sessions(request):                                   
             ses.save()
   
     message = 'Everything done.'
-    return JsonResponse({'message': message})
+    return JsonResponse({'message': message, 'type': type})
 
 def add_all_waitingroom_to_sessions_circle(request):
     message = ''
+    type = 'info'
     if not WaitingRoom.objects.exists():
         message = f'Aborting operation, there are no waiting users!'
-
+        type = 'error'
     circlesWaiting = WaitingRoom.objects.all().values_list('circle', flat=True)
     circlesWaiting = list(dict.fromkeys(circlesWaiting))
     for circleWaiting in circlesWaiting:
@@ -541,6 +606,7 @@ def add_all_waitingroom_to_sessions_circle(request):
             else:
                 lacking_sessions = 0
             message = f'There are {free_seats} free seats'
+            type = 'info'
         else:  
             lacking_sessions = math.ceil(waitingrooms.count()/2)
             print(f'Preparing {lacking_sessions} sessions...')
@@ -548,6 +614,7 @@ def add_all_waitingroom_to_sessions_circle(request):
             ses = ActiveSession(circle=circle)
             print(f'Preparing {lacking_sessions} sessions...')
             message += f'Created session of id {ses.session_ID}'
+            # type = 'success'
             ses.save()
         free_sessions = sessions = ActiveSession.objects.filter(Q(member2_ID__isnull=True) | Q(member1_ID__isnull=True), circle=circle).values_list('pk', flat=True)
         
@@ -572,7 +639,8 @@ def add_all_waitingroom_to_sessions_circle(request):
                             break
                 ses.save()
     message = 'Everything done.'
-    return JsonResponse({'message': message})
+    type = 'info'
+    return JsonResponse({'message': message, 'type' :type})
 
 def get_room_id(request):
     user_id = request.user.user_ID
@@ -582,10 +650,12 @@ def get_room_id(request):
     session = session_tuple[0]
     if session == None:
         message = f'User {user_id} not matched to session yet.'
+        type='error'
         
     else:
         message = session.session_ID
-    return JsonResponse({'message': message})
+        type='info'
+    return JsonResponse({'message': message, 'type' :type})
 
 def get_room_messages(request):
     user_id = request.user.user_ID
@@ -617,14 +687,15 @@ def close_session(request): #czyści sesję z wiadomości i przygotowuje do nast
         messages.delete()
         remove_user_from_session(request, desired_session_id=session_id, desired_user_id=False)
         session.delete() #opcjonalne
-        return JsonResponse({'message': 'Messages deleted and session cleared.'})
+        return JsonResponse({'message': 'Messages deleted and session cleared.', 'type': 'error'})
     else:
-        return JsonResponse({'message': 'No session to close.'})
+        return JsonResponse({'message': 'No session to close.', 'type': 'error'})
 
 #@gather_response           Nie do końca wiem czy musi być ten dekorator
 def join_circle(request, **kwargs):
     #/chat/join_circle/<circle_code>
     message = ''
+    type='info'
     if kwargs['desired_circle']:
         desired_circle = kwargs['desired_circle']
     else:
@@ -637,30 +708,36 @@ def join_circle(request, **kwargs):
     except Circle.DoesNotExist:
         message = f'Circle with invitational code: {desired_circle} not found.'
         return JsonResponse({   
-            'message': message
+            'message': message,
+            'type': 'error'
         })
     maxU = circle.users_IDs.all()
 
     if circle.expire_date < now:
         return JsonResponse({   
-            'message': f'Circle {desired_circle} is expired.'
+            'message': f'Circle {desired_circle} is expired.',
+            'type': 'error'
         })
     elif circle.users_IDs.filter(pk = user_id).exists():
         message = f'User {user_id} is already in the circle {circle.circle_ID}.'
+        type ='error'
     elif circle.max_users > len(maxU):
         user.user_circles_IDs.add(circle)
         circle.users_IDs.add(user)
         message = f'User {user_id} has been added to the circle {circle.circle_ID}.'
+        type='success'
     else:
         message = f'Circle {circle.circle_ID} has no free sits.'
-    
+        type='error'
     return JsonResponse({   
-            'message': message
+            'message': message,
+            'type':type
         })
 
 def leave_circle(request, **kwargs):
     #/chat/join_circle/<circle_id>
     message = ''
+    type = 'info'
     if kwargs['desired_circle_id']:
         desired_circle_id = kwargs['desired_circle_id']
     else:
@@ -672,15 +749,18 @@ def leave_circle(request, **kwargs):
         circle = Circle.objects.get(pk = desired_circle_id)
     except Circle.DoesNotExist:
         message = f'Circle {desired_circle_id} not found.'
+        type = 'error'
         return JsonResponse({   
-            'message': message
+            'message': message,
+            'type':type
         })
     user.user_circles_IDs.remove(circle)
     circle.users_IDs.remove(user)
     message = f'User {user_id} has been removed from the circle {desired_circle_id}.'
-    
+    type='success'
     return JsonResponse({   
-            'message': message
+            'message': message,
+            'type':type
         })
 
 def refresh_expire_date(request, **kwargs):
@@ -712,7 +792,8 @@ def refresh_expire_date(request, **kwargs):
     circle.code = code
     circle.save()
     
-    return JsonResponse({'message' : f'Expire date in circle {desired_circle_id} changed to {desired_expire_date}. New circle code: {code}'})
+    return JsonResponse({'message' : f'Expire date in circle {desired_circle_id} changed to {desired_expire_date}. New circle code: {code}',
+    'type': 'success'})
 
 def get_user_circles_ids(request):
     pass

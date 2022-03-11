@@ -30,7 +30,7 @@ class MessageSerializer(serializers.HyperlinkedModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('email', 'last_login', 'date_joined', 'is_staff')
+        fields = ('email', 'last_login', 'social_link', 'date_joined', 'is_staff')
 
 class WaitingRoomSerializer(serializers.ModelSerializer):
     class Meta:
